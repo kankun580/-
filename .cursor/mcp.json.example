@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "_comment_phase_a": "=== Phase MCP-A: 今すぐ有効化 ===",
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer YOUR_GITHUB_FINE_GRAINED_PAT"
+      }
+    },
+    "_comment_phase_b": "=== Phase MCP-B: レビュー UI 実装後 ===",
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "_comment_phase_c": "=== Phase MCP-C: Tips 連携直前（要 Tips 側の MCP 定義）===",
+    "tips": {
+      "_comment": "Tips 公式 MCP の command/url は提供元ドキュメントに合わせて差し替え",
+      "command": "npx",
+      "args": ["-y", "REPLACE_WITH_TIPS_MCP_PACKAGE"]
+    },
+    "_comment_phase_d": "=== Phase MCP-D: 任意 ===",
+    "google-drive": {
+      "_comment": "利用する Drive MCP パッケージに合わせて設定。フォルダは Tips_AI_Auto_Sales_System のみ",
+      "command": "npx",
+      "args": ["-y", "REPLACE_WITH_GOOGLE_DRIVE_MCP_PACKAGE"]
+    },
+    "gas-clasp": {
+      "_comment": "clasp 済みなら省略可。GAS MCP サーバー",
+      "command": "npx",
+      "args": ["-y", "@google/clasp", "start-mcp-server"]
+    }
+  }
+}

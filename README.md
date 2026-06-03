@@ -28,7 +28,7 @@ tests/         Playwright 等のテスト
 
 ## 現在のフェーズ
 
-**フェーズ 0: 準備** — リポジトリ構成と仕様取り込み済み。次は GAS/clasp 雛形と `setupProject()`。
+**フェーズ 0〜1: 準備・基盤** — 仕様取り込み、`setupProject()`、`GeminiClient` 実装済み。[セットアップ手順](./docs/setup.md) に従い clasp push 後に GAS で実行してください。
 
 ## セキュリティ
 

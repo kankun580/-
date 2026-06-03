@@ -32,10 +32,11 @@
 |---|---|
 | GitHub リポジトリ | 本リポジトリで開始 |
 | フォルダ・仕様書取り込み | 本コミットで実施 |
-| Google Drive 専用フォルダ | 未実施（setupProject() または手動） |
-| 管理用スプレッドシート | 未実施 |
-| GAS プロジェクト / clasp | 雛形ディレクトリのみ |
-| API キー・Tips MCP 検証 | 未実施 |
+| Google Drive 専用フォルダ | GAS で `setupProject()` 実行時に自動作成 |
+| 管理用スプレッドシート | 同上（10シート・ヘッダー・サンプル商品） |
+| GAS / clasp | `gas/*.gs` 実装済み（要 clasp push） |
+| Gemini API 疎通 | `testGeminiConnection()` 実装済み（要 API キー設定） |
+| Tips MCP 検証 | 未実施（フェーズ3） |
 
 ## 推奨実装順序（差分 Phase 0〜10 に準拠）
 

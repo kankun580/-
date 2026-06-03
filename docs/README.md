@@ -5,6 +5,8 @@
 | [original_spec.md](./original_spec.md) | 詳細仕様書（ベース） |
 | [diff_spec_gemini_mcp.md](./diff_spec_gemini_mcp.md) | 差分仕様（Gemini API・MCP 6点セット・clasp） |
 | [project_evaluation.md](./project_evaluation.md) | 初期評価メモ（2026-06-04） |
+| [sheet_schema.md](./sheet_schema.md) | 裏側DB正規スキーマ |
+| [setup.md](./setup.md) | clasp / setupProject / Gemini 疎通 |
 
 ## 読み方
 

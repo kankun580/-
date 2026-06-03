@@ -1,0 +1,45 @@
+# ローカルPC不要: GitHub Secrets に GEMINI_API_KEY + CLASPRC_JSON を登録すると push で自動実行
+name: Bootstrap GAS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - 'cursor/**'
+    paths:
+      - 'gas/**'
+      - 'scripts/**'
+      - '.github/workflows/bootstrap-gas.yml'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Write clasp credentials
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+        run: |
+          if [ -z "$CLASPRC_JSON" ]; then
+            echo "CLASPRC_JSON secret is not set. Skip." >&2
+            exit 1
+          fi
+          mkdir -p "$HOME"
+          printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
+          chmod 600 "$HOME/.clasprc.json"
+
+      - name: Agent bootstrap
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          CLASP_SCRIPT_ID: ${{ secrets.CLASP_SCRIPT_ID }}
+        run: npm run agent:bootstrap

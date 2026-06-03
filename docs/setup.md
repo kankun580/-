@@ -6,6 +6,19 @@
 - [Node.js](https://nodejs.org/)（clasp 用）
 - [Gemini API キー](https://aistudio.google.com/apikey)
 
+## 自動セットアップ（Cloud Agent / CI 向け）
+
+Cursor Secrets に `GEMINI_API_KEY` と `CLASPRC_JSON` を登録したうえで:
+
+```bash
+npm install
+npm run setup:remote
+```
+
+詳細は [cursor-secrets.md](./cursor-secrets.md) を参照。
+
+---
+
 ## 1. clasp のインストールとログイン
 
 ```bash

@@ -7,6 +7,7 @@
 | [project_evaluation.md](./project_evaluation.md) | 初期評価メモ（2026-06-04） |
 | [sheet_schema.md](./sheet_schema.md) | 裏側DB正規スキーマ |
 | [setup.md](./setup.md) | clasp / setupProject / Gemini 疎通 |
+| [cursor-secrets.md](./cursor-secrets.md) | Cloud Agent 用シークレット登録 |
 
 ## 読み方
 

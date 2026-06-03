@@ -59,17 +59,17 @@ function doGet(e) {
     if (page === 'tips_detail' && e.parameter.product_id) {
       var tipsT = HtmlService.createTemplateFromFile('Html/tips_detail');
       tipsT.productId = e.parameter.product_id;
-      return tipsT.evaluate().setTitle('Tips連携').addMetaTag('viewport', 'width=device-width, initial-scale=1');
+      return htmlPage_(injectSharedStyles_(tipsT.evaluate().getContent()), 'Tips連携');
     }
     if (page === 'detail' && e.parameter.product_id) {
       var t = HtmlService.createTemplateFromFile('Html/detail');
       t.productId = e.parameter.product_id;
-      return t.evaluate().setTitle('記事詳細').addMetaTag('viewport', 'width=device-width, initial-scale=1');
+      return htmlPage_(injectSharedStyles_(t.evaluate().getContent()), '記事詳細');
     }
 
     var template = HtmlService.createTemplateFromFile('Html/index');
     template.status = getProjectStatus();
-    return template.evaluate().setTitle('Tips AI 管理').addMetaTag('viewport', 'width=device-width, initial-scale=1');
+    return htmlPage_(injectSharedStyles_(template.evaluate().getContent()), 'Tips AI 管理');
   } catch (err) {
     return HtmlService.createHtmlOutput(
       '<p>エラー: ' + escapeHtml_(err.message) + '</p><p><a href="?page=home">ホーム</a></p>'
@@ -83,10 +83,33 @@ function doGet(e) {
  * @returns {GoogleAppsScript.HTML.HtmlOutput}
  */
 function pageHtml_(file, title) {
-  return HtmlService.createTemplateFromFile(file)
-    .evaluate()
+  var html = injectSharedStyles_(HtmlService.createHtmlOutputFromFile(file).getContent());
+  return htmlPage_(html, title);
+}
+
+/**
+ * 共通 CSS を head 内に挿入（テンプレート評価を避ける静的 HTML 用）
+ * @param {string} html
+ * @returns {string}
+ */
+function injectSharedStyles_(html) {
+  var styles = include('Html/shared_styles');
+  if (html.indexOf('</head>') >= 0) {
+    return html.replace('</head>', styles + '</head>');
+  }
+  return styles + html;
+}
+
+/**
+ * @param {string} html
+ * @param {string} title
+ * @returns {GoogleAppsScript.HTML.HtmlOutput}
+ */
+function htmlPage_(html, title) {
+  return HtmlService.createHtmlOutput(html)
     .setTitle(title)
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 /**

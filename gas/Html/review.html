@@ -4,7 +4,6 @@
   <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <?!= include('Html/shared_styles'); ?>
   <style>
     body { font-family: -apple-system, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; }
     h1 { font-size: 1.2rem; }
@@ -21,7 +20,12 @@
   <a class="back" href="?page=home">← ホーム</a>
   <h1>レビュー待ち</h1>
   <div id="list">読み込み中…</div>
+  <p id="err" style="color:#c33;font-size:14px;"></p>
   <script>
+    window.onerror = function (msg) {
+      var el = document.getElementById('list');
+      if (el) el.textContent = '表示エラー: ' + msg;
+    };
     google.script.run
       .withSuccessHandler(function (items) {
         var el = document.getElementById('list');
@@ -30,8 +34,10 @@
           return;
         }
         el.innerHTML = items.map(function (p) {
-          var riskClass = 'risk-' + (p.risk_level === 'high' ? 'high' : p.risk_level === 'medium' ? 'medium' : 'low');
-          return '<div class="card"><a href="?page=detail&product_id=' + encodeURIComponent(p.product_id) + '">' +
+          var riskClass = 'risk-low';
+          if (p.risk_level === 'high') riskClass = 'risk-high';
+          else if (p.risk_level === 'medium') riskClass = 'risk-medium';
+          return '<div class="card"><a href="?page=detail&amp;product_id=' + encodeURIComponent(p.product_id) + '">' +
             '<strong>' + escapeHtml(p.title) + '</strong>' +
             '<div class="meta">' + escapeHtml(p.product_type) + ' · ' + p.price_jpy + '円 · <span class="' + riskClass + '">' + escapeHtml(p.risk_level) + '</span></div>' +
             '<div class="meta">' + escapeHtml(p.review_summary || '').substring(0, 80) + '</div></a></div>';

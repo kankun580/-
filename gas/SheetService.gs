@@ -3,11 +3,19 @@
  */
 
 /**
+ * Script Properties のスプレッドシート ID（循環参照を避ける）
+ * @returns {string}
+ */
+function getSpreadsheetId_() {
+  return PropertiesService.getScriptProperties().getProperty(CONFIG_KEYS.SPREADSHEET_ID) || '';
+}
+
+/**
  * 管理用スプレッドシートを取得（未作成なら null）
  * @returns {GoogleAppsScript.Spreadsheet.Spreadsheet|null}
  */
 function getManagementSpreadsheet() {
-  var id = getConfigValue(CONFIG_KEYS.SPREADSHEET_ID);
+  var id = getSpreadsheetId_();
   if (!id) {
     return null;
   }

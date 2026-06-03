@@ -14,11 +14,6 @@ function doGet(e) {
         .setTitle('初回セットアップ')
         .addMetaTag('viewport', 'width=device-width, initial-scale=1');
     }
-    try {
-      ensureProjectSetup();
-    } catch (err) {
-      Logger.log('doGet ensureProjectSetup: ' + err.message);
-    }
     var template = HtmlService.createTemplateFromFile('Html/index');
     template.status = getProjectStatus();
     return template

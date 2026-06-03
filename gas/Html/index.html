@@ -27,21 +27,37 @@
       background: #1a73e8; color: #fff;
       text-align: center; text-decoration: none;
     }
-    pre { font-size: 12px; overflow-x: auto; white-space: pre-wrap; }
   </style>
 </head>
 <body>
-  <h1>Tips AI 販売システム</h1>
+  <h1>Tips AI 販売 管理</h1>
   <div class="card">
-    <p>セットアップ: <span class="<?= status.setupComplete ? 'ok' : 'ng' ?>"><?= status.setupComplete ? '完了' : '未完了' ?></span></p>
-    <p>Gemini キー: <span class="<?= status.hasGeminiKey ? 'ok' : 'ng' ?>"><?= status.hasGeminiKey ? '設定済み' : '未設定' ?></span></p>
-    <? if (status.spreadsheetUrl) { ?>
-      <p><a href="<?= status.spreadsheetUrl ?>" target="_blank" rel="noopener">管理DB（裏側・通常は開かない）</a></p>
+    <p>セットアップ:
+      <? if (status.setupComplete) { ?>
+        <span class="ok">完了</span>
+      <? } else { ?>
+        <span class="ng">未完了</span>
+      <? } ?>
+    </p>
+    <p>Gemini キー:
+      <? if (status.hasGeminiKey) { ?>
+        <span class="ok">設定済み</span>
+      <? } else { ?>
+        <span class="ng">未設定</span>
+      <? } ?>
+    </p>
+    <? if (status.reviewWaitingCount > 0) { ?>
+      <p>レビュー待ち: <strong><?= status.reviewWaitingCount ?></strong> 件</p>
+    <? } else { ?>
+      <p>レビュー待ち: 0 件</p>
     <? } ?>
   </div>
   <div class="card">
-    <p>日常運用はこの画面から行います（レビュー一覧は次フェーズで実装）。</p>
-    <p>初回は Cloud Agent が <code>setupProject</code> を実行済みである必要があります。</p>
+    <p>日常運用はこの画面から行います。</p>
+    <p>レビュー一覧・承認ボタンは次の更新で追加予定です。</p>
+    <? if (!status.setupComplete) { ?>
+      <a class="btn" href="?page=setup">初回セットアップへ</a>
+    <? } ?>
   </div>
 </body>
 </html>

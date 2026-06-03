@@ -48,6 +48,12 @@
 
 - 2回目以降は Agent が生成した `CLASPRC_JSON` 相当を `CLASPRC_JSON` シークレットに保存（Agent が案内）
 
+### 注意（Web アプリ）
+
+- リンクは **デプロイごとに変わります**。古い URL は 404 になります。
+- **kankun580@gmail.com** でログインした Chrome / Safari で開く（「自分のみ」公開のため）。
+- 「Page Not Found」→ 最新のセットアップ URL を Agent に確認してください。
+
 ### C. GitHub Actions も使う場合（任意）
 
 スマホの GitHub アプリ → リポジトリ → Settings → Secrets:

@@ -8,22 +8,40 @@
  */
 function doGet(e) {
   e = e || {};
-  if (e.parameter.page === 'setup') {
-    return HtmlService.createHtmlOutputFromFile('setup')
-      .setTitle('初回セットアップ')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
-  }
   try {
-    ensureProjectSetup();
+    if (e.parameter.page === 'setup') {
+      return HtmlService.createHtmlOutputFromFile('Html/setup')
+        .setTitle('初回セットアップ')
+        .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+    }
+    try {
+      ensureProjectSetup();
+    } catch (err) {
+      Logger.log('doGet ensureProjectSetup: ' + err.message);
+    }
+    var template = HtmlService.createTemplateFromFile('Html/index');
+    template.status = getProjectStatus();
+    return template
+      .evaluate()
+      .setTitle('Tips AI 管理')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   } catch (err) {
-    Logger.log('doGet setup: ' + err.message);
+    return HtmlService.createHtmlOutput(
+      '<p>エラー: ' + escapeHtml_(err.message) + '</p>' +
+        '<p><a href="?page=setup">初回セットアップへ</a></p>'
+    ).setTitle('エラー');
   }
-  var template = HtmlService.createTemplateFromFile('index');
-  template.status = getProjectStatus();
-  return template
-    .evaluate()
-    .setTitle('Tips AI 管理')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+function escapeHtml_(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 /**

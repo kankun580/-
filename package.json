@@ -9,8 +9,10 @@
   },
   "type": "module",
   "scripts": {
+    "agent:bootstrap": "node scripts/agent-bootstrap.mjs",
     "test:gemini": "node scripts/test-gemini-local.mjs",
     "setup:remote": "node scripts/remote-setup.mjs",
+    "auth:google": "node scripts/google-auth-phone.mjs",
     "clasp:push": "clasp push",
     "clasp:setup": "clasp run setupProject",
     "clasp:test-gemini": "clasp run testGeminiConnection"
@@ -28,5 +30,8 @@
   "homepage": "https://github.com/kankun580/-#readme",
   "devDependencies": {
     "@google/clasp": "^3.3.0"
+  },
+  "dependencies": {
+    "google-auth-library": "^9.15.1"
   }
 }

@@ -4,13 +4,13 @@
  *
  * 必要な環境変数（Cursor Cloud Agent の Secrets 推奨）:
  *   GEMINI_API_KEY  — Gemini API キー
- *   CLASPRC_JSON    — ローカルで clasp login 後の ~/.clasprc.json の中身
+ *   CLASPRC_JSON / CLASP_OAUTH_CALLBACK_URL — Google 認証（スマホ完結）
  *   CLASP_SCRIPT_ID — 既存 GAS プロジェクト ID（省略時は create）
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { existsSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { ensureGoogleAuth } from './google-auth-phone.mjs';
 
 const ROOT = join(import.meta.dirname, '..');
 const CLASP = join(ROOT, 'node_modules', '.bin', 'clasp');
@@ -27,24 +27,6 @@ function run(cmd, args, opts = {}) {
     throw new Error(`${cmd} ${args.join(' ')} failed (${r.status}): ${err}`);
   }
   return r.stdout || '';
-}
-
-function ensureClaspAuth() {
-  const clasprcPath = join(homedir(), '.clasprc.json');
-  if (process.env.CLASPRC_JSON) {
-    writeFileSync(clasprcPath, process.env.CLASPRC_JSON, { mode: 0o600 });
-    console.log('✓ CLASPRC_JSON から ~/.clasprc.json を作成しました');
-    return;
-  }
-  if (existsSync(clasprcPath)) {
-    console.log('✓ 既存の ~/.clasprc.json を使用します');
-    return;
-  }
-  throw new Error(
-    'clasp 未ログインです。\n' +
-      '  1) ローカルで clasp login 後、~/.clasprc.json を CLASPRC_JSON シークレットに登録\n' +
-      '  2) または Cloud Agent で clasp login を完了させる'
-  );
 }
 
 function ensureClaspProject() {
@@ -96,7 +78,7 @@ async function main() {
     throw new Error('Gemini ローカル疎通に失敗しました');
   }
 
-  ensureClaspAuth();
+  await ensureGoogleAuth();
   const scriptId = ensureClaspProject();
   console.log('Script ID:', scriptId);
 
@@ -110,7 +92,17 @@ async function main() {
   console.log(JSON.stringify(claspRun('setupProject'), null, 2));
 
   console.log('→ testGeminiConnection...');
-  console.log(JSON.stringify(claspRun('testGeminiConnection'), null, 2));
+  console.log(claspRun('testGeminiConnection'));
+
+  console.log('→ installAutomationTriggers...');
+  console.log(claspRun('installAutomationTriggers'));
+
+  console.log('→ Web アプリをデプロイ...');
+  try {
+    run(CLASP, ['create-deployment', '--description', 'Tips AI Web App']);
+  } catch (e) {
+    console.warn('デプロイはスキップ（既存デプロイがある場合があります）:', e.message);
+  }
 
   console.log('\n=== セットアップ完了 ===');
 }

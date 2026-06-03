@@ -1,30 +1,37 @@
-# Cursor Cloud Agent 用シークレット
+# Cursor Secrets（スマホで登録・PC不要）
 
-Cloud Agent から `npm run setup:remote` を完走させるには、Cursor の **Background Agent Secrets** に以下を登録してください。
+Cursor アプリ（スマホ / タブレット）→ **Background Agent Secrets** に登録します。
 
-| シークレット名 | 必須 | 内容 |
-|---|---|---|
-| `GEMINI_API_KEY` | はい | [Google AI Studio](https://aistudio.google.com/apikey) の API キー |
-| `CLASPRC_JSON` | はい | ローカルで `clasp login` 後の `~/.clasprc.json` を**丸ごと**貼り付け |
-| `CLASP_SCRIPT_ID` | いいえ | 既存 GAS プロジェクト ID（省略時は Agent が `clasp create`） |
+## 必須
 
-## CLASPRC_JSON の取得手順（ローカル PC）
+| 名前 | 内容 |
+|---|---|
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/apikey) で発行 |
+
+## Google 認証（どちらか）
+
+| 名前 | いつ使う |
+|---|---|
+| `CLASP_OAUTH_CALLBACK_URL` | **初回**。スマホブラウザで Google ログイン後、アドレスバーの `http://localhost:8888/?code=...` **全文** |
+| `CLASPRC_JSON` | **2回目以降**。初回 bootstrap 成功後に Agent が案内する認証 JSON の全文 |
+
+ローカル PC での `clasp login` は**不要**です。
+
+## 任意
+
+| 名前 | 内容 |
+|---|---|
+| `CLASP_SCRIPT_ID` | 既存 GAS プロジェクト ID |
+| `CLASP_REDIRECT_PORT` | OAuth ポート（既定 `8888`） |
+
+## 登録後のコマンド（Agent が実行）
 
 ```bash
-npm install -g @google/clasp
-clasp login
-cat ~/.clasprc.json   # この内容を CLASPRC_JSON に登録
+npm run agent:bootstrap
 ```
 
-## 登録後
+内容: Google 認証 → Gemini 疎通 → `setupProject` → トリガー登録 → Web アプリデプロイ
 
-Cloud Agent に「setup:remote を実行して」と依頼するか、リポジトリで:
+## GitHub Actions 用（任意）
 
-```bash
-npm run setup:remote
-```
-
-## セキュリティ
-
-- `CLASPRC_JSON` は Google アカウントへのアクセス権を含みます。リポジトリにコミットしないでください。
-- `GEMINI_API_KEY` も同様に Secrets のみで管理してください。
+スマホ GitHub アプリ → リポジトリ Secrets に同じ `GEMINI_API_KEY` / `CLASPRC_JSON` を登録すると、`git push` で自動 bootstrap します。

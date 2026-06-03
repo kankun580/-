@@ -33,5 +33,6 @@ function bootstrapAll(apiKey) {
   steps.push(bootstrapGeminiKey(apiKey, true));
   steps.push(setupProject());
   steps.push(testGeminiConnection());
+  steps.push(installAutomationTriggers());
   return { ok: true, steps: steps };
 }

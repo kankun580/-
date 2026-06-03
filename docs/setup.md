@@ -1,119 +1,42 @@
-# セットアップ手順
+# セットアップ（スマホ完結・PC不要）
 
-## 前提
+**ローカル PC は使いません。** 詳細は [smartphone-only.md](./smartphone-only.md)。
 
-- Google アカウント
-- [Node.js](https://nodejs.org/)（clasp 用）
-- [Gemini API キー](https://aistudio.google.com/apikey)
+## 自動セットアップ（推奨）
 
-## 自動セットアップ（Cloud Agent / CI 向け）
+### 1. Cursor Secrets（スマホの Cursor アプリ）
 
-Cursor Secrets に `GEMINI_API_KEY` と `CLASPRC_JSON` を登録したうえで:
+[cursor-secrets.md](./cursor-secrets.md) のとおり `GEMINI_API_KEY` を登録。
 
-```bash
-npm install
-npm run setup:remote
-```
+### 2. Cloud Agent に依頼
 
-詳細は [cursor-secrets.md](./cursor-secrets.md) を参照。
+「`npm run agent:bootstrap` を実行して」
 
----
+初回のみ Google 認証 URL が表示されます → スマホで開き、リダイレクト URL を `CLASP_OAUTH_CALLBACK_URL` に登録 → 再実行。
 
-## 1. clasp のインストールとログイン
+### 3. 完了確認
 
-```bash
-npm install -g @google/clasp
-clasp login
-```
+- Gmail にセットアップ完了メール
+- GAS Web アプリ URL（Agent / デプロイログに表示）をスマホで開く
 
-## 2. GAS プロジェクトの作成と接続
+## コマンド一覧
 
-### 新規作成する場合
-
-```bash
-cd /path/to/repo
-clasp create --type standalone --title "Tips AI Auto Sales" --rootDir gas
-```
-
-生成された `.clasp.json` の `scriptId` を控えます。
-
-### 既存プロジェクトに接続する場合
-
-```bash
-cp .clasp.json.example .clasp.json
-# scriptId を編集
-clasp clone --rootDir gas
-```
-
-## 3. コードの push
-
-```bash
-clasp push
-```
-
-## 4. Script Properties の設定
-
-GAS エディタ → **プロジェクトの設定** → **スクリプト プロパティ**:
-
-| キー | 値 |
+| コマンド | 内容 |
 |---|---|
-| `GEMINI_API_KEY` | Gemini API キー |
-| `GEMINI_MODEL_DEFAULT` | （任意）例: `gemini-2.0-flash` |
-| `GEMINI_MODEL_REVIEW` | （任意）レビュー用モデル |
+| `npm run agent:bootstrap` | 全自動（認証〜setupProject〜デプロイ） |
+| `npm run auth:google` | Google 認証 URL 生成 or コールバック処理 |
+| `npm run test:gemini` | Gemini 疎通のみ |
+| `npm run setup:remote` | GAS 側セットアップのみ（認証済み前提） |
 
-またはターミナル:
+## GitHub Actions（任意）
 
-```bash
-clasp open
-```
+リポジトリ Secrets に `GEMINI_API_KEY` / `CLASPRC_JSON` を登録後、`main` または `cursor/*` への push で `.github/workflows/bootstrap-gas.yml` が実行されます。
 
-## 5. setupProject() の実行
+## clasp（参考・PC不要）
 
-GAS エディタで `setupProject` を選択 → **実行**。
+Cloud Agent 環境内で `npx clasp` が動きます。手元 PC に clasp を入れる必要はありません。
 
-初回実行で以下が作成されます。
-
-- Drive: `Tips_AI_Auto_Sales_System/` 配下のサブフォルダ
-- 管理用スプレッドシート（全シート・ヘッダー・初期 config）
-- サンプル商品1件（products）
-- 完了通知メール（実行ユーザーの Gmail）
-
-**注意:** 2回目以降は既存を再利用します。再作成は `setupProject({ force: true })`（既存データに注意）。
-
-## 6. Gemini 疎通テスト
-
-1. `GEMINI_API_KEY` を設定
-2. `setupProject()` 完了後
-3. `testGeminiConnection` を実行
-
-成功時: ログに `Gemini API 疎通成功`、`api_usage_log` に1行追加。
-
-## 7. config の追記設定
-
-管理スプレッドシートの `config` シート（または GAS から `setConfigValue`）:
-
-| key | 例 |
-|---|---|
-| `REVIEW_EMAIL` | 通知先メール |
-
-## 8. Web アプリ（フェーズ2以降）
-
-```bash
-clasp deploy
-```
-
-アクセス: 自分のみ（`appsscript.json` の `webapp` 設定参照）。
-
-## トラブルシュート
-
-| 症状 | 対処 |
-|---|---|
-| `GEMINI_API_KEY が未設定` | Script Properties を確認 |
-| `管理用スプレッドシートが未作成` | `setupProject()` を先に実行 |
-| Gemini 404 / model not found | `GEMINI_MODEL_DEFAULT` を `gemini-2.0-flash` 等に変更 |
-| clasp push 失敗 | `.clasp.json` の `rootDir` が `gas` か確認 |
-
-## 関連ドキュメント
+## 関連
 
 - [sheet_schema.md](./sheet_schema.md)
-- [diff_spec_gemini_mcp.md](./diff_spec_gemini_mcp.md)
+- [mcp-weapons.md](./mcp-weapons.md)

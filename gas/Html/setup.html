@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: -apple-system, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; }
+    h1 { font-size: 1.2rem; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
+    button {
+      width: 100%; padding: 14px; margin-top: 12px; font-size: 1rem;
+      border: none; border-radius: 10px; background: #1a73e8; color: #fff;
+    }
+    button:disabled { opacity: 0.6; }
+    #msg { margin-top: 12px; white-space: pre-wrap; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>初回セットアップ</h1>
+  <div class="card">
+    <p>Gemini API キーを入力して「セットアップ実行」を押してください（1回のみ）。</p>
+    <input type="password" id="apiKey" placeholder="GEMINI_API_KEY" autocomplete="off">
+    <button id="btn" onclick="runSetup()">セットアップ実行</button>
+    <div id="msg"></div>
+  </div>
+  <script>
+    function runSetup() {
+      var key = document.getElementById('apiKey').value.trim();
+      if (!key) { document.getElementById('msg').textContent = 'APIキーを入力してください'; return; }
+      document.getElementById('btn').disabled = true;
+      document.getElementById('msg').textContent = '実行中…';
+      google.script.run
+        .withSuccessHandler(function (r) {
+          document.getElementById('msg').textContent = JSON.stringify(r, null, 2);
+          document.getElementById('btn').disabled = false;
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('msg').textContent = 'エラー: ' + e.message;
+          document.getElementById('btn').disabled = false;
+        })
+        .completeSetupFromWeb(key);
+    }
+  </script>
+</body>
+</html>

@@ -36,3 +36,14 @@ function bootstrapAll(apiKey) {
   steps.push(installAutomationTriggers());
   return { ok: true, steps: steps };
 }
+
+/**
+ * スマホ Web アプリから初回セットアップ（ログイン済み Google アカウントで実行）
+ * @param {string} apiKey
+ * @returns {Object}
+ */
+function completeSetupFromWeb(apiKey) {
+  var result = bootstrapAll(apiKey);
+  writeOperationLog('user', 'completeSetupFromWeb', { comment: 'Web初回セットアップ' });
+  return result;
+}

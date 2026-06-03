@@ -7,6 +7,12 @@
  * @returns {GoogleAppsScript.HTML.HtmlOutput}
  */
 function doGet(e) {
+  e = e || {};
+  if (e.parameter.page === 'setup') {
+    return HtmlService.createHtmlOutputFromFile('setup')
+      .setTitle('初回セットアップ')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+  }
   try {
     ensureProjectSetup();
   } catch (err) {
@@ -14,7 +20,6 @@ function doGet(e) {
   }
   var template = HtmlService.createTemplateFromFile('index');
   template.status = getProjectStatus();
-  template.statusJson = JSON.stringify(getProjectStatus());
   return template
     .evaluate()
     .setTitle('Tips AI 管理')

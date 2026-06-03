@@ -1,0 +1,37 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "Tips で販売する有料コンテンツを **Gemini API** で生成し、**GAS Web アプリ** からスマホで承認する半自動販売システムです。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "type": "module",
+  "scripts": {
+    "agent:bootstrap": "node scripts/agent-bootstrap.mjs",
+    "test:gemini": "node scripts/test-gemini-local.mjs",
+    "setup:remote": "node scripts/remote-setup.mjs",
+    "auth:google": "node scripts/google-auth-phone.mjs",
+    "clasp:push": "clasp push",
+    "clasp:setup": "clasp run setupProject",
+    "clasp:test-gemini": "clasp run testGeminiConnection"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kankun580/-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kankun580/-/issues"
+  },
+  "homepage": "https://github.com/kankun580/-#readme",
+  "devDependencies": {
+    "@google/clasp": "^3.3.0"
+  },
+  "dependencies": {
+    "google-auth-library": "^9.15.1"
+  }
+}

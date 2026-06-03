@@ -83,7 +83,8 @@ function doGet(e) {
  * @returns {GoogleAppsScript.HTML.HtmlOutput}
  */
 function pageHtml_(file, title) {
-  return HtmlService.createHtmlOutputFromFile(file)
+  return HtmlService.createTemplateFromFile(file)
+    .evaluate()
     .setTitle(title)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }

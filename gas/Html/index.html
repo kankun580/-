@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: -apple-system, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; font-size: 16px; }
+    h1 { font-size: 1.25rem; margin: 0 0 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .btn { display: block; width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem; border: none; border-radius: 10px; background: #1a73e8; color: #fff; text-align: center; text-decoration: none; }
+    .btn.secondary { background: #5f6368; }
+    .num { font-size: 1.5rem; font-weight: 700; color: #1a73e8; }
+  </style>
+</head>
+<body>
+  <h1>Tips AI 販売 管理</h1>
+  <div class="card">
+    <p>レビュー待ち</p>
+    <p class="num"><?= status.reviewWaitingCount ?></p> 件
+    <p>修正待ち: <?= status.revisionWaitingCount ?> 件</p>
+    <p>未着手: <?= status.pendingCount ?> 件</p>
+  </div>
+  <a class="btn" href="?page=review">レビュー待ち一覧</a>
+  <a class="btn secondary" href="?page=revision" style="margin-top:8px;">修正待ち一覧</a>
+  <button class="btn secondary" onclick="runGenerate()">下書きを1件生成</button>
+  <p id="msg" style="margin-top:12px;font-size:14px;"></p>
+  <script>
+    function runGenerate() {
+      document.getElementById('msg').textContent = '生成中…（1〜2分かかることがあります）';
+      google.script.run
+        .withSuccessHandler(function (r) {
+          document.getElementById('msg').textContent = r.message || JSON.stringify(r);
+          if (r.ok && r.generated) location.reload();
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('msg').textContent = 'エラー: ' + e.message;
+        })
+        .generateDrafts();
+    }
+  </script>
+</body>
+</html>

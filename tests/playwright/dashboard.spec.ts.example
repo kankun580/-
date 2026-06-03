@@ -1,0 +1,20 @@
+/**
+ * Phase MCP-B 用サンプル（Playwright MCP または npx playwright test）
+ * 実行前: GAS_WEBAPP_URL を環境変数に設定
+ *
+ * cp tests/playwright/dashboard.spec.ts.example tests/playwright/dashboard.spec.ts
+ */
+import { test, expect } from '@playwright/test';
+
+const BASE_URL =
+  process.env.GAS_WEBAPP_URL ||
+  'https://script.google.com/macros/s/AKfycbyFKB71c6aykuvWvKrpecfjppeBCds6PzPJVFBvWFVzHbCt9PuDfn-Nl6WO7l1VLUQq7w/exec';
+
+test.use({
+  viewport: { width: 390, height: 844 },
+});
+
+test('管理画面が表示される', async ({ page }) => {
+  await page.goto(BASE_URL);
+  await expect(page.getByRole('heading', { name: /Tips AI/ })).toBeVisible();
+});

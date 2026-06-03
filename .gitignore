@@ -5,9 +5,9 @@
 credentials.json
 .clasprc.json
 .clasp.json
+.cursor/mcp.json
 
 # clasp
-.clasp.json
 
 # Node / Playwright
 node_modules/

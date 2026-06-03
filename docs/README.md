@@ -7,7 +7,11 @@
 | [project_evaluation.md](./project_evaluation.md) | 初期評価メモ（2026-06-04） |
 | [sheet_schema.md](./sheet_schema.md) | 裏側DB正規スキーマ |
 | [setup.md](./setup.md) | clasp / setupProject / Gemini 疎通 |
-| [cursor-secrets.md](./cursor-secrets.md) | Cloud Agent 用シークレット登録 |
+| [smartphone-only.md](./smartphone-only.md) | スマホ完結・PC不要の全体方針 |
+| [cursor-secrets.md](./cursor-secrets.md) | Cursor Secrets（スマホで登録） |
+| [mcp-weapons.md](./mcp-weapons.md) | MCP 6点セット |
+| [mcp-rollout.md](./mcp-rollout.md) | MCP 段階導入（推奨順） |
+| [mcp-setup.md](./mcp-setup.md) | MCP 設定手順 |
 
 ## 読み方
 

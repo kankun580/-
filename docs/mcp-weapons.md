@@ -26,9 +26,10 @@ npx clasp start-mcp-server
 
 Cursor から GAS プロジェクトを操作する補助チャネル。背骨は引き続き **git + clasp push**（`agent:bootstrap`）。
 
-## 優先順位
+## 優先順位（詳細は [mcp-rollout.md](./mcp-rollout.md)）
 
-1. `npm run agent:bootstrap` で基盤完了
-2. Context7 + GitHub で実装加速
-3. Tips MCP / Drive MCP はフェーズ3以降
-4. Playwright MCP は Web UI 実装後
+1. ~~`npm run agent:bootstrap`~~ 基盤完了
+2. **今**: Context7 + GitHub（Phase MCP-A）
+3. **レビュー UI と同時**: Playwright（Phase MCP-B）
+4. **Tips 直前**: Tips MCP（Phase MCP-C）
+5. **任意**: Drive MCP / GAS MCP（Phase MCP-D）

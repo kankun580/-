@@ -52,6 +52,26 @@ function getReviewSummaryForDraft_(draftId) {
  * @param {string} productId
  * @returns {Object}
  */
+function getRevisionWaitingProducts() {
+  var products = getProductsByStatus('修正待ち');
+  var list = [];
+  for (var i = 0; i < products.length; i++) {
+    var p = products[i];
+    var draft = getLatestDraftByProductId(p.product_id);
+    list.push({
+      product_id: p.product_id,
+      title: p.title,
+      product_type: p.product_type,
+      price_jpy: p.price_jpy,
+      risk_level: p.risk_level,
+      status: p.status,
+      approval_comment: draft ? draft.approval_comment : '',
+      doc_url: draft ? draft.full_doc_url : '',
+    });
+  }
+  return list;
+}
+
 function getProductDetailForWeb(productId) {
   var product = getProductById(productId);
   if (!product) {
@@ -59,15 +79,28 @@ function getProductDetailForWeb(productId) {
   }
   var draft = getLatestDraftByProductId(productId);
   var reviewSummary = '';
+  var freePreview = '';
+  var paidPreview = '';
   if (draft) {
     reviewSummary = getReviewSummaryForDraft_(draft.draft_id);
+    if (draft.full_doc_url) {
+      try {
+        var docId = getDocIdFromUrl_(draft.full_doc_url);
+        var previews = extractPreviewFromDocText_(readDraftDocumentText(docId));
+        freePreview = previews.free_preview;
+        paidPreview = previews.paid_preview;
+      } catch (e) {
+        freePreview = '（プレビュー取得エラー）';
+        paidPreview = '';
+      }
+    }
   }
   return {
     product: product,
     draft: draft,
     review_summary: reviewSummary,
-    free_preview: '（Docsで全文を確認してください）',
-    paid_preview: '（Docsで全文を確認してください）',
+    free_preview: freePreview || '（Docsで全文を確認してください）',
+    paid_preview: paidPreview || '（Docsで全文を確認してください）',
   };
 }
 
@@ -90,7 +123,10 @@ function requestRevision(productId, comment) {
   updateProductStatus(productId, '修正待ち');
   updateDraftField(productId, 'approved_by_user', '修正');
   updateDraftField(productId, 'approval_comment', comment || '');
-  return { ok: true, message: '修正依頼を記録しました' };
+  return {
+    ok: true,
+    message: '修正依頼を記録しました。修正待ち一覧から「AI再生成」を実行してください',
+  };
 }
 
 /**

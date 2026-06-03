@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: -apple-system, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; }
+    h1 { font-size: 1.2rem; }
+    .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .meta { font-size: 13px; color: #666; margin-top: 6px; }
+    .comment { font-size: 14px; margin-top: 8px; padding: 8px; background: #f0f4ff; border-radius: 8px; }
+    .btn { width: 100%; padding: 12px; margin-top: 8px; font-size: 1rem; border: none; border-radius: 10px; background: #1a73e8; color: #fff; }
+    .btn.link { display: inline-block; text-align: center; text-decoration: none; box-sizing: border-box; }
+    .back { display: inline-block; margin-bottom: 12px; color: #1a73e8; }
+  </style>
+</head>
+<body>
+  <a class="back" href="?page=home">← ホーム</a>
+  <h1>修正待ち</h1>
+  <p style="font-size:14px;color:#666;">修正依頼後、「AI再生成」で Gemini が本文を直し、再びレビュー待ちになります。</p>
+  <div id="list">読み込み中…</div>
+  <button class="btn" onclick="runProcessOne()">先頭1件を AI 再生成</button>
+  <p id="msg" style="font-size:14px;margin-top:12px;"></p>
+  <script>
+    function loadList() {
+      google.script.run
+        .withSuccessHandler(function (items) {
+          var el = document.getElementById('list');
+          if (!items || !items.length) {
+            el.innerHTML = '<p>修正待ちはありません。</p>';
+            return;
+          }
+          el.innerHTML = items.map(function (p) {
+            return '<div class="card">' +
+              '<strong>' + escapeHtml(p.title) + '</strong>' +
+              '<div class="meta">' + escapeHtml(p.product_type) + ' · ' + p.price_jpy + '円</div>' +
+              (p.approval_comment ? '<div class="comment">' + escapeHtml(p.approval_comment) + '</div>' : '') +
+              '<a class="btn link" href="?page=detail&product_id=' + encodeURIComponent(p.product_id) + '">詳細を見る</a>' +
+              '<button class="btn" onclick="regen(\'' + escapeJs(p.product_id) + '\')">この商品を AI 再生成</button>' +
+              '</div>';
+          }).join('');
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('list').textContent = 'エラー: ' + e.message;
+        })
+        .getRevisionWaitingProducts();
+    }
+
+    function regen(productId) {
+      if (!confirm('AIで修正版を生成しますか？（1〜2分かかることがあります）')) return;
+      document.getElementById('msg').textContent = '再生成中…';
+      google.script.run
+        .withSuccessHandler(function (r) {
+          document.getElementById('msg').textContent = '完了しました。レビュー待ち一覧を確認してください。';
+          setTimeout(function () { location.href = '?page=review'; }, 1200);
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('msg').textContent = 'エラー: ' + e.message;
+          loadList();
+        })
+        .regenerateDraftFromRevision(productId);
+    }
+
+    function runProcessOne() {
+      document.getElementById('msg').textContent = '再生成中…';
+      google.script.run
+        .withSuccessHandler(function (r) {
+          if (r.processed) {
+            document.getElementById('msg').textContent = '完了: ' + (r.product_id || '');
+            setTimeout(function () { location.href = '?page=review'; }, 1200);
+          } else {
+            document.getElementById('msg').textContent = r.message || '対象なし';
+            loadList();
+          }
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('msg').textContent = 'エラー: ' + e.message;
+        })
+        .processRevisions();
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function escapeJs(s) {
+      return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    }
+    loadList();
+  </script>
+</body>
+</html>

@@ -172,14 +172,23 @@ function getLatestDraftByProductId(productId) {
 
 /**
  * @param {string} productId
- * @param {string} field approved_by_user | approval_comment
+ * @param {string} field approved_by_user | approval_comment | generation_model
  * @param {string} value
  */
 function updateDraftField(productId, field, value) {
   var ss = getManagementSpreadsheet();
   var sheet = ss.getSheetByName(SHEET_NAMES.DRAFTS);
   var lastRow = sheet.getLastRow();
-  var col = field === 'approved_by_user' ? 9 : 10;
+  var colMap = {
+    generation_model: 7,
+    generation_status: 8,
+    approved_by_user: 9,
+    approval_comment: 10,
+  };
+  var col = colMap[field];
+  if (!col) {
+    throw new Error('不明なフィールド: ' + field);
+  }
   for (var r = lastRow; r >= 2; r--) {
     if (String(sheet.getRange(r, 2).getValue()) === productId) {
       sheet.getRange(r, col).setValue(value);

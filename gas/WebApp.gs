@@ -17,6 +17,9 @@ function doGet(e) {
     if (page === 'review') {
       return pageHtml_('Html/review', 'レビュー待ち');
     }
+    if (page === 'revision') {
+      return pageHtml_('Html/revision', '修正待ち');
+    }
     if (page === 'detail' && e.parameter.product_id) {
       var t = HtmlService.createTemplateFromFile('Html/detail');
       t.productId = e.parameter.product_id;

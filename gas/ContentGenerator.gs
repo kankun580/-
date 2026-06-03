@@ -113,6 +113,106 @@ function generateDraftForProduct_(product) {
  * @param {string} riskLevel
  * @returns {string}
  */
+/**
+ * 修正待ち商品を1件処理（Web / 手動）
+ * @returns {Object}
+ */
+function processRevisions() {
+  var targets = getProductsByStatus('修正待ち');
+  if (!targets.length) {
+    return { ok: true, message: '修正待ちの商品がありません', processed: 0 };
+  }
+  var result = regenerateDraftFromRevision(targets[0].product_id);
+  return { ok: true, processed: 1, product_id: targets[0].product_id, result: result };
+}
+
+/**
+ * 修正コメントに基づき下書きを再生成
+ * @param {string} productId
+ * @returns {Object}
+ */
+function regenerateDraftFromRevision(productId) {
+  var product = getProductById(productId);
+  if (!product) {
+    throw new Error('商品が見つかりません');
+  }
+  if (product.status !== '修正待ち' && product.status !== '修正中') {
+    throw new Error('ステータスが修正待ちではありません: ' + product.status);
+  }
+
+  var draft = getLatestDraftByProductId(productId);
+  if (!draft || !draft.full_doc_url) {
+    throw new Error('下書きまたは Docs URL がありません');
+  }
+
+  var revisionComment = draft.approval_comment || '';
+  updateProductStatus(productId, '修正中');
+
+  try {
+    var docId = getDocIdFromUrl_(draft.full_doc_url);
+    var currentText = readDraftDocumentText(docId);
+    var versionNum = countRevisionVersionsInDoc_(currentText) + 1;
+
+    var model = getDefaultGeminiModel_();
+    var prompt = buildRevisionPrompt_(product, currentText, revisionComment);
+    var reply = callGemini(prompt, {
+      model: model,
+      processType: 'regenerateDraft',
+    });
+    var parsed = parseGeminiJson_(reply.text);
+
+    appendRevisionToDocument(docId, versionNum, {
+      title: parsed.title || product.title,
+      subtitle: parsed.subtitle,
+      free_part: parsed.free_part,
+      paid_part: parsed.paid_part,
+      cta: parsed.cta,
+      disclaimer: parsed.disclaimer || buildDefaultDisclaimer_(product.risk_level),
+      review_summary: parsed.review_summary,
+    });
+
+    appendReview({
+      review_id: generateId_('REV'),
+      draft_id: draft.draft_id,
+      legal_risk: parsed.legal_risk || '',
+      ad_risk: '',
+      fabrication_risk: '',
+      anxiety_risk: '',
+      value_score: parsed.value_score || '',
+      readability_score: '',
+      recommendation: parsed.recommendation || 'hold',
+      review_summary: (parsed.review_summary || '') + ' [v' + versionNum + ']',
+    });
+
+    updateDraftField(productId, 'approved_by_user', '未確認');
+    updateDraftField(productId, 'generation_model', model);
+    updateProductStatus(productId, 'レビュー待ち');
+
+    sendReviewNotificationEmail_(product, draft.full_doc_url, parsed.review_summary);
+
+    writeOperationLog('system', 'regenerateDraftFromRevision', {
+      productId: productId,
+      draftId: draft.draft_id,
+      version: versionNum,
+      comment: revisionComment,
+    });
+
+    return {
+      draft_id: draft.draft_id,
+      doc_url: draft.full_doc_url,
+      version: versionNum,
+      review_summary: parsed.review_summary,
+    };
+  } catch (e) {
+    updateProductStatus(productId, '修正待ち');
+    writeErrorLog('regenerateDraftFromRevision', e.message, {
+      productId: productId,
+      stackTrace: e.stack || '',
+    });
+    throw e;
+  }
+}
+
 function buildDefaultDisclaimer_(riskLevel) {
   if (riskLevel === 'high' || riskLevel === '中' || riskLevel === 'medium') {
     return (

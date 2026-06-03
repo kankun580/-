@@ -135,7 +135,7 @@ function getDefaultGeminiModel_() {
   return (
     props.getProperty(SCRIPT_PROPERTY_KEYS.GEMINI_MODEL_DEFAULT) ||
     getConfigValue(CONFIG_KEYS.GEMINI_MODEL_DEFAULT) ||
-    'gemini-2.0-flash'
+    'gemini-2.5-flash'
   );
 }
 

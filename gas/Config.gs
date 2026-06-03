@@ -84,7 +84,7 @@ var CONFIG_KEYS = {
 var DEFAULT_CONFIG_ROWS = [
   [CONFIG_KEYS.SETUP_VERSION, PROJECT.SETUP_VERSION, 'セットアップバージョン'],
   [CONFIG_KEYS.AI_PROVIDER, 'gemini', 'AIプロバイダー'],
-  [CONFIG_KEYS.GEMINI_MODEL_DEFAULT, 'gemini-2.0-flash', 'デフォルト生成モデル'],
+  [CONFIG_KEYS.GEMINI_MODEL_DEFAULT, 'gemini-2.5-flash', 'デフォルト生成モデル'],
   [CONFIG_KEYS.MAX_DAILY_GENERATION, '1', '1日の最大生成数'],
   [CONFIG_KEYS.AUTO_TIPS_DRAFT, 'false', 'Tips下書き自動作成'],
   [CONFIG_KEYS.AUTO_PUBLISH, 'false', '自動公開'],

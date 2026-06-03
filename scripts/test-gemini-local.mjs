@@ -3,7 +3,7 @@
  * GAS 外で Gemini API 疎通を確認（GEMINI_API_KEY 環境変数が必要）
  */
 const apiKey = process.env.GEMINI_API_KEY;
-const model = process.env.GEMINI_MODEL_DEFAULT || 'gemini-2.0-flash';
+const model = process.env.GEMINI_MODEL_DEFAULT || 'gemini-2.5-flash';
 
 if (!apiKey) {
   console.error('GEMINI_API_KEY が未設定です。');

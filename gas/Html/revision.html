@@ -19,34 +19,10 @@
   <a class="back" href="?page=home">← ホーム</a>
   <h1>修正待ち</h1>
   <p style="font-size:14px;color:#666;">修正依頼後、「AI再生成」で Gemini が本文を直し、再びレビュー待ちになります。</p>
-  <div id="list">読み込み中…</div>
+  <div id="list"><!--REVISION_LIST--></div>
   <button class="btn" onclick="runProcessOne()">先頭1件を AI 再生成</button>
   <p id="msg" style="font-size:14px;margin-top:12px;"></p>
   <script>
-    function loadList() {
-      google.script.run
-        .withSuccessHandler(function (items) {
-          var el = document.getElementById('list');
-          if (!items || !items.length) {
-            el.innerHTML = '<p>修正待ちはありません。</p>';
-            return;
-          }
-          el.innerHTML = items.map(function (p) {
-            return '<div class="card">' +
-              '<strong>' + escapeHtml(p.title) + '</strong>' +
-              '<div class="meta">' + escapeHtml(p.product_type) + ' · ' + p.price_jpy + '円</div>' +
-              (p.approval_comment ? '<div class="comment">' + escapeHtml(p.approval_comment) + '</div>' : '') +
-              '<a class="btn link" href="?page=detail&product_id=' + encodeURIComponent(p.product_id) + '">詳細を見る</a>' +
-              '<button class="btn" onclick="regen(\'' + escapeJs(p.product_id) + '\')">この商品を AI 再生成</button>' +
-              '</div>';
-          }).join('');
-        })
-        .withFailureHandler(function (e) {
-          document.getElementById('list').textContent = 'エラー: ' + e.message;
-        })
-        .getRevisionWaitingProducts();
-    }
-
     function regen(productId) {
       if (!confirm('AIで修正版を生成しますか？（1〜2分かかることがあります）')) return;
       document.getElementById('msg').textContent = '再生成中…';
@@ -57,7 +33,6 @@
         })
         .withFailureHandler(function (e) {
           document.getElementById('msg').textContent = 'エラー: ' + e.message;
-          loadList();
         })
         .regenerateDraftFromRevision(productId);
     }
@@ -71,7 +46,7 @@
             setTimeout(function () { location.href = '?page=review'; }, 1200);
           } else {
             document.getElementById('msg').textContent = r.message || '対象なし';
-            loadList();
+            location.reload();
           }
         })
         .withFailureHandler(function (e) {
@@ -80,16 +55,6 @@
         .processRevisions();
     }
 
-    function escapeHtml(s) {
-      return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(new RegExp('<', 'g'), '&lt;')
-        .replace(new RegExp('>', 'g'), '&gt;');
-    }
-    function escapeJs(s) {
-      return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    }
-    loadList();
   </script>
 </body>
 </html>

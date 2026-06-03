@@ -60,6 +60,7 @@ function setupProject(options) {
     moveSpreadsheetToFolder_(ss.getId(), folders.rootFolderId);
     createSampleRows(ss);
     createTimeTriggers();
+    ensureTipsWebhookSecret();
     sendSetupCompleteEmail(ss.getUrl());
 
     writeOperationLog('system', 'setupProject_complete', {

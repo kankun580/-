@@ -48,13 +48,13 @@ function doGet(e) {
       return pageHtml_('Html/setup', '初回セットアップ');
     }
     if (page === 'review') {
-      return pageHtml_('Html/review', 'レビュー待ち');
+      return renderReviewPage_();
     }
     if (page === 'revision') {
-      return pageHtml_('Html/revision', '修正待ち');
+      return renderRevisionPage_();
     }
     if (page === 'tips') {
-      return pageHtml_('Html/tips', 'Tips連携');
+      return renderTipsPage_();
     }
     if (page === 'tips_detail' && e.parameter.product_id) {
       var tipsT = HtmlService.createTemplateFromFile('Html/tips_detail');
@@ -88,19 +88,6 @@ function pageHtml_(file, title) {
 }
 
 /**
- * 共通 CSS を head 内に挿入（テンプレート評価を避ける静的 HTML 用）
- * @param {string} html
- * @returns {string}
- */
-function injectSharedStyles_(html) {
-  var styles = include('Html/shared_styles');
-  if (html.indexOf('</head>') >= 0) {
-    return html.replace('</head>', styles + '</head>');
-  }
-  return styles + html;
-}
-
-/**
  * @param {string} html
  * @param {string} title
  * @returns {GoogleAppsScript.HTML.HtmlOutput}
@@ -109,7 +96,8 @@ function htmlPage_(html, title) {
   return HtmlService.createHtmlOutput(html)
     .setTitle(title)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .setSandboxMode(HtmlService.SandboxMode.IFRAME);
 }
 
 /**

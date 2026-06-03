@@ -10,10 +10,10 @@
     .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
     .meta { font-size: 13px; color: #666; margin-top: 6px; }
     .err { font-size: 13px; color: #c33; margin-top: 6px; }
-    .btn { display: block; width: 100%; padding: 12px; margin-top: 8px; font-size: 1rem; border: none; border-radius: 10px; background: #1a73e8; color: #fff; text-decoration: none; text-align: center; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
-    .btn.secondary { background: #5f6368; }
+    .btn { display: block; width: 100%; padding: 12px; margin-top: 8px; font-size: 1rem; border: none; border-radius: 10px; background: #1a73e8; color: #fff; text-decoration: none; text-align: center; box-sizing: border-box; }
     .back { display: inline-block; margin-bottom: 12px; color: #1a73e8; }
     h2 { font-size: 1rem; margin: 20px 0 8px; }
+    .error { color: #c33; }
   </style>
 </head>
 <body>
@@ -22,49 +22,9 @@
   <p style="font-size:14px;color:#666;">承認済み商品を Tips の下書きにします。公開は Tips アプリで手動で行ってください。</p>
 
   <h2>連携待ち</h2>
-  <div id="pending">読み込み中…</div>
+  <div id="pending"><!--TIPS_PENDING--></div>
 
   <h2>下書き登録済み</h2>
-  <div id="linked">読み込み中…</div>
-
-  <script>
-    google.script.run.withSuccessHandler(renderPending).getTipsPendingProducts();
-    google.script.run.withSuccessHandler(renderLinked).getTipsLinkedProducts();
-
-    function renderPending(items) {
-      var el = document.getElementById('pending');
-      if (!items || !items.length) {
-        el.innerHTML = '<p>連携待ちはありません。</p>';
-        return;
-      }
-      el.innerHTML = items.map(function (p) {
-        return '<div class="card"><strong>' + esc(p.title) + '</strong>' +
-          '<div class="meta">' + p.price_jpy + '円 · ' + esc(p.status) + '</div>' +
-          (p.tips_error ? '<div class="err">' + esc(p.tips_error) + '</div>' : '') +
-          '<a class="btn" href="?page=tips_detail&product_id=' + encodeURIComponent(p.product_id) + '">URLを登録 / 詳細</a></div>';
-      }).join('');
-    }
-
-    function renderLinked(items) {
-      var el = document.getElementById('linked');
-      if (!items || !items.length) {
-        el.innerHTML = '<p>まだ登録がありません。</p>';
-        return;
-      }
-      el.innerHTML = items.map(function (p) {
-        return '<div class="card"><strong>' + esc(p.title) + '</strong>' +
-          '<div class="meta">' + esc(p.status) + '</div>' +
-          (p.tips_draft_url ? '<a href="' + p.tips_draft_url + '" target="_blank">Tips下書きを開く</a>' : '') +
-          '</div>';
-      }).join('');
-    }
-
-    function esc(s) {
-      return String(s || '')
-        .replace(/&/g, '&amp;')
-        .replace(new RegExp('<', 'g'), '&lt;')
-        .replace(new RegExp('>', 'g'), '&gt;');
-    }
-  </script>
+  <div id="linked"><!--TIPS_LINKED--></div>
 </body>
 </html>

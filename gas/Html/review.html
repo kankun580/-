@@ -14,46 +14,12 @@
     .risk-medium { color: #e37400; }
     .risk-low { color: #0a7; }
     .back { display: inline-block; margin-bottom: 12px; color: #1a73e8; }
+    .error { color: #c33; font-size: 14px; }
   </style>
 </head>
 <body>
   <a class="back" href="?page=home">← ホーム</a>
   <h1>レビュー待ち</h1>
-  <div id="list">読み込み中…</div>
-  <p id="err" style="color:#c33;font-size:14px;"></p>
-  <script>
-    window.onerror = function (msg) {
-      var el = document.getElementById('list');
-      if (el) el.textContent = '表示エラー: ' + msg;
-    };
-    google.script.run
-      .withSuccessHandler(function (items) {
-        var el = document.getElementById('list');
-        if (!items || !items.length) {
-          el.innerHTML = '<p>レビュー待ちはありません。</p>';
-          return;
-        }
-        el.innerHTML = items.map(function (p) {
-          var riskClass = 'risk-low';
-          if (p.risk_level === 'high') riskClass = 'risk-high';
-          else if (p.risk_level === 'medium') riskClass = 'risk-medium';
-          return '<div class="card"><a href="?page=detail&amp;product_id=' + encodeURIComponent(p.product_id) + '">' +
-            '<strong>' + escapeHtml(p.title) + '</strong>' +
-            '<div class="meta">' + escapeHtml(p.product_type) + ' · ' + p.price_jpy + '円 · <span class="' + riskClass + '">' + escapeHtml(p.risk_level) + '</span></div>' +
-            '<div class="meta">' + escapeHtml(p.review_summary || '').substring(0, 80) + '</div></a></div>';
-        }).join('');
-      })
-      .withFailureHandler(function (e) {
-        document.getElementById('list').textContent = 'エラー: ' + e.message;
-      })
-      .getReviewWaitingProducts();
-
-    function escapeHtml(s) {
-      return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(new RegExp('<', 'g'), '&lt;')
-        .replace(new RegExp('>', 'g'), '&gt;');
-    }
-  </script>
+  <div id="list"><!--REVIEW_LIST--></div>
 </body>
 </html>

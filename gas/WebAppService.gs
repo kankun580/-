@@ -39,7 +39,11 @@ function getReviewSummaryForDraft_(draftId) {
     return '';
   }
   var lastRow = sheet.getLastRow();
-  var data = sheet.getRange(2, 1, lastRow, 10).getValues();
+  if (lastRow < 2) {
+    return '';
+  }
+  var numRows = lastRow - 1;
+  var data = sheet.getRange(2, 1, numRows, 10).getValues();
   for (var i = data.length - 1; i >= 0; i--) {
     if (String(data[i][1]) === draftId) {
       return String(data[i][9]);

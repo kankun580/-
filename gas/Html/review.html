@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: -apple-system, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; }
+    h1 { font-size: 1.2rem; }
+    .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .card a { text-decoration: none; color: inherit; display: block; }
+    .meta { font-size: 13px; color: #666; margin-top: 6px; }
+    .risk-high { color: #c33; }
+    .risk-medium { color: #e37400; }
+    .risk-low { color: #0a7; }
+    .back { display: inline-block; margin-bottom: 12px; color: #1a73e8; }
+  </style>
+</head>
+<body>
+  <a class="back" href="?page=home">← ホーム</a>
+  <h1>レビュー待ち</h1>
+  <div id="list">読み込み中…</div>
+  <script>
+    google.script.run
+      .withSuccessHandler(function (items) {
+        var el = document.getElementById('list');
+        if (!items || !items.length) {
+          el.innerHTML = '<p>レビュー待ちはありません。</p>';
+          return;
+        }
+        el.innerHTML = items.map(function (p) {
+          var riskClass = 'risk-' + (p.risk_level === 'high' ? 'high' : p.risk_level === 'medium' ? 'medium' : 'low');
+          return '<div class="card"><a href="?page=detail&product_id=' + encodeURIComponent(p.product_id) + '">' +
+            '<strong>' + escapeHtml(p.title) + '</strong>' +
+            '<div class="meta">' + escapeHtml(p.product_type) + ' · ' + p.price_jpy + '円 · <span class="' + riskClass + '">' + escapeHtml(p.risk_level) + '</span></div>' +
+            '<div class="meta">' + escapeHtml(p.review_summary || '').substring(0, 80) + '</div></a></div>';
+        }).join('');
+      })
+      .withFailureHandler(function (e) {
+        document.getElementById('list').textContent = 'エラー: ' + e.message;
+      })
+      .getReviewWaitingProducts();
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>

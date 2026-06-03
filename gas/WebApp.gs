@@ -1,5 +1,5 @@
 /**
- * スマホ用 Web アプリ（セットアップ状態表示・将来の管理画面の入口）
+ * スマホ用 Web アプリ
  */
 
 /**
@@ -8,24 +8,40 @@
  */
 function doGet(e) {
   e = e || {};
+  var page = e.parameter.page || 'home';
+
   try {
-    if (e.parameter.page === 'setup') {
-      return HtmlService.createHtmlOutputFromFile('Html/setup')
-        .setTitle('初回セットアップ')
-        .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+    if (page === 'setup') {
+      return pageHtml_('Html/setup', '初回セットアップ');
     }
+    if (page === 'review') {
+      return pageHtml_('Html/review', 'レビュー待ち');
+    }
+    if (page === 'detail' && e.parameter.product_id) {
+      var t = HtmlService.createTemplateFromFile('Html/detail');
+      t.productId = e.parameter.product_id;
+      return t.evaluate().setTitle('記事詳細').addMetaTag('viewport', 'width=device-width, initial-scale=1');
+    }
+
     var template = HtmlService.createTemplateFromFile('Html/index');
     template.status = getProjectStatus();
-    return template
-      .evaluate()
-      .setTitle('Tips AI 管理')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+    return template.evaluate().setTitle('Tips AI 管理').addMetaTag('viewport', 'width=device-width, initial-scale=1');
   } catch (err) {
     return HtmlService.createHtmlOutput(
-      '<p>エラー: ' + escapeHtml_(err.message) + '</p>' +
-        '<p><a href="?page=setup">初回セットアップへ</a></p>'
+      '<p>エラー: ' + escapeHtml_(err.message) + '</p><p><a href="?page=home">ホーム</a></p>'
     ).setTitle('エラー');
   }
+}
+
+/**
+ * @param {string} file
+ * @param {string} title
+ * @returns {GoogleAppsScript.HTML.HtmlOutput}
+ */
+function pageHtml_(file, title) {
+  return HtmlService.createHtmlOutputFromFile(file)
+    .setTitle(title)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
 /**
@@ -39,11 +55,6 @@ function escapeHtml_(text) {
     .replace(/>/g, '&gt;');
 }
 
-/**
- * HtmlService テンプレート用
- * @param {string} name
- * @returns {string}
- */
 function include(name) {
   return HtmlService.createHtmlOutputFromFile(name).getContent();
 }

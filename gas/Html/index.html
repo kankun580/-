@@ -19,10 +19,12 @@
     <p>レビュー待ち</p>
     <p class="num"><?= status.reviewWaitingCount ?></p> 件
     <p>修正待ち: <?= status.revisionWaitingCount ?> 件</p>
+    <p>Tips連携待ち: <?= status.tipsPendingCount ?> 件</p>
     <p>未着手: <?= status.pendingCount ?> 件</p>
   </div>
   <a class="btn" href="?page=review">レビュー待ち一覧</a>
   <a class="btn secondary" href="?page=revision" style="margin-top:8px;">修正待ち一覧</a>
+  <a class="btn secondary" href="?page=tips" style="margin-top:8px;">Tips連携</a>
   <button class="btn secondary" onclick="runGenerate()">下書きを1件生成</button>
   <p id="msg" style="margin-top:12px;font-size:14px;"></p>
   <script>

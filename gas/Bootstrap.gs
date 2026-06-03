@@ -43,6 +43,7 @@ function bootstrapAll(apiKey) {
  * @returns {Object}
  */
 function completeSetupFromWeb(apiKey) {
+  ensureTipsWebhookSecret();
   var result = bootstrapAll(apiKey);
   writeOperationLog('user', 'completeSetupFromWeb', { comment: 'Web初回セットアップ' });
   return result;

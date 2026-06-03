@@ -6,6 +6,39 @@
  * @param {Object} e
  * @returns {GoogleAppsScript.HTML.HtmlOutput}
  */
+/**
+ * Tips MCP Webhook（POST JSON）
+ * @param {Object} e
+ * @returns {GoogleAppsScript.Content.TextOutput}
+ */
+function doPost(e) {
+  try {
+    var body = e.postData && e.postData.contents ? JSON.parse(e.postData.contents) : {};
+    var action = body.action || 'record_tips_draft';
+
+    if (action === 'record_tips_draft') {
+      var result = recordTipsDraftFromWebhook(body);
+      return jsonResponse_({ ok: true, result: result });
+    }
+    if (action === 'tips_error') {
+      recordTipsLinkError(body.product_id, body.error_message || 'Webhook error');
+      return jsonResponse_({ ok: true });
+    }
+
+    return jsonResponse_({ ok: false, error: '不明な action: ' + action });
+  } catch (err) {
+    return jsonResponse_({ ok: false, error: err.message });
+  }
+}
+
+/**
+ * @param {Object} obj
+ * @returns {GoogleAppsScript.Content.TextOutput}
+ */
+function jsonResponse_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
 function doGet(e) {
   e = e || {};
   var page = e.parameter.page || 'home';
@@ -19,6 +52,14 @@ function doGet(e) {
     }
     if (page === 'revision') {
       return pageHtml_('Html/revision', '修正待ち');
+    }
+    if (page === 'tips') {
+      return pageHtml_('Html/tips', 'Tips連携');
+    }
+    if (page === 'tips_detail' && e.parameter.product_id) {
+      var tipsT = HtmlService.createTemplateFromFile('Html/tips_detail');
+      tipsT.productId = e.parameter.product_id;
+      return tipsT.evaluate().setTitle('Tips連携').addMetaTag('viewport', 'width=device-width, initial-scale=1');
     }
     if (page === 'detail' && e.parameter.product_id) {
       var t = HtmlService.createTemplateFromFile('Html/detail');

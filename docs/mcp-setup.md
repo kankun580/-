@@ -94,6 +94,8 @@ Tips 公式または利用中の MCP サーバー名・認証方法に従い Cur
 Tips MCP でテスト用下書きを1件作成できるか確認だけして。公開はしない。
 ```
 
+詳細なハンドオフ手順: [tips-mcp-integration.md](./tips-mcp-integration.md)
+
 ## 5. Phase MCP-D（任意）
 
 ### Google Drive MCP

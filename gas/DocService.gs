@@ -155,3 +155,32 @@ function countRevisionVersionsInDoc_(text) {
   var matches = String(text).match(/--- v\d+ 修正版 ---/g);
   return matches ? matches.length : 0;
 }
+
+/**
+ * Docs 本文から記事セクションを抽出（最新バージョン）
+ * @param {string} text
+ * @returns {Object}
+ */
+function extractArticleSectionsFromDocText_(text) {
+  var body = String(text);
+  var versionParts = body.split(/--- v\d+ 修正版 ---/);
+  if (versionParts.length > 1) {
+    body = versionParts[versionParts.length - 1];
+  }
+  return {
+    free_part: extractSection_(body, '--- 無料部分 ---', '--- 有料部分 ---'),
+    paid_part: extractSection_(body, '--- 有料部分 ---', '--- CTA ---'),
+    cta: extractSection_(body, '--- CTA ---', '--- 注意書き ---'),
+    disclaimer: extractSection_(body, '--- 注意書き ---', '--- AIセルフレビュー'),
+  };
+}
+
+/**
+ * 商品の最新 Docs から Tips 連携用の全文を取得
+ * @param {string} docId
+ * @returns {Object}
+ */
+function readArticleSectionsFromDoc(docId) {
+  var text = readDraftDocumentText(docId);
+  return extractArticleSectionsFromDocText_(text);
+}

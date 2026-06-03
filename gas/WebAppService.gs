@@ -95,9 +95,16 @@ function getProductDetailForWeb(productId) {
       }
     }
   }
+  var tipsLink = null;
+  try {
+    tipsLink = getTipsLinkByProductId_(productId);
+  } catch (e) {
+    tipsLink = null;
+  }
   return {
     product: product,
     draft: draft,
+    tips_link: tipsLink,
     review_summary: reviewSummary,
     free_preview: freePreview || '（Docsで全文を確認してください）',
     paid_preview: paidPreview || '（Docsで全文を確認してください）',
@@ -109,9 +116,38 @@ function getProductDetailForWeb(productId) {
  * @returns {Object}
  */
 function approveProduct(productId) {
-  updateProductStatus(productId, '承認済み');
   updateDraftField(productId, 'approved_by_user', '承認');
-  return { ok: true, message: '承認しました' };
+  queueProductForTipsHandoff_(productId);
+  return {
+    ok: true,
+    message: '承認しました。Tips連携画面で下書きURLを登録するか、Cursor Agent に Tips MCP 作成を依頼してください',
+  };
+}
+
+/**
+ * @param {string} productId
+ * @returns {Object}
+ */
+function getTipsDraftPayloadForWeb(productId) {
+  return buildTipsDraftPayload(productId);
+}
+
+/**
+ * @param {string} productId
+ * @param {string} tipsDraftUrl
+ * @param {string=} tipsId
+ * @returns {Object}
+ */
+function saveTipsDraftUrlFromWeb(productId, tipsDraftUrl, tipsId) {
+  return recordTipsDraftLink(productId, tipsDraftUrl, tipsId || '');
+}
+
+/**
+ * @param {string} productId
+ * @returns {Object}
+ */
+function exportTipsHandoffFromWeb(productId) {
+  return exportTipsHandoffJson(productId);
 }
 
 /**

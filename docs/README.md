@@ -11,6 +11,7 @@
 | [cursor-secrets.md](./cursor-secrets.md) | Cursor Secrets（スマホで登録） |
 | [mcp-weapons.md](./mcp-weapons.md) | MCP 6点セット |
 | [mcp-rollout.md](./mcp-rollout.md) | MCP 段階導入（推奨順） |
+| [tips-mcp-integration.md](./tips-mcp-integration.md) | Tips MCP / 下書き連携（フェーズ3） |
 | [mcp-setup.md](./mcp-setup.md) | MCP 設定手順 |
 
 ## 読み方

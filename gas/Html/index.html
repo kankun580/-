@@ -24,9 +24,9 @@
     <p>未着手: <?= status.pendingCount ?> 件</p>
   </div>
   <div class="actions">
-    <a class="btn" href="?page=review">レビュー待ち一覧</a>
-    <a class="btn secondary" href="?page=revision">修正待ち一覧</a>
-    <a class="btn secondary" href="?page=tips">Tips連携</a>
+    <a class="btn" href="<?= webAppUrl ?>?page=review" target="_top">レビュー待ち一覧</a>
+    <a class="btn secondary" href="<?= webAppUrl ?>?page=revision" target="_top">修正待ち一覧</a>
+    <a class="btn secondary" href="<?= webAppUrl ?>?page=tips" target="_top">Tips連携</a>
     <button type="button" class="btn secondary" onclick="runGenerate()">下書きを1件生成</button>
   </div>
   <p id="msg" style="margin-top:12px;font-size:14px;"></p>

@@ -42,8 +42,14 @@ function jsonResponse_(obj) {
 function doGet(e) {
   e = e || {};
   var page = e.parameter.page || 'home';
+  ensureWebAppUrlSaved_();
 
   try {
+    if (page === 'ping') {
+      return ContentService.createTextOutput('pong build=' + getWebAppUrl_()).setMimeType(
+        ContentService.MimeType.TEXT
+      );
+    }
     if (page === 'setup') {
       return pageHtml_('Html/setup', '初回セットアップ');
     }
@@ -59,16 +65,19 @@ function doGet(e) {
     if (page === 'tips_detail' && e.parameter.product_id) {
       var tipsT = HtmlService.createTemplateFromFile('Html/tips_detail');
       tipsT.productId = e.parameter.product_id;
+      tipsT.webAppUrl = getWebAppUrl_();
       return htmlPage_(injectSharedStyles_(tipsT.evaluate().getContent()), 'Tips連携');
     }
     if (page === 'detail' && e.parameter.product_id) {
       var t = HtmlService.createTemplateFromFile('Html/detail');
       t.productId = e.parameter.product_id;
+      t.webAppUrl = getWebAppUrl_();
       return htmlPage_(injectSharedStyles_(t.evaluate().getContent()), '記事詳細');
     }
 
     var template = HtmlService.createTemplateFromFile('Html/index');
     template.status = getProjectStatus();
+    template.webAppUrl = getWebAppUrl_();
     return htmlPage_(injectSharedStyles_(template.evaluate().getContent()), 'Tips AI 管理');
   } catch (err) {
     return HtmlService.createHtmlOutput(
@@ -113,4 +122,49 @@ function escapeHtml_(text) {
 
 function include(name) {
   return HtmlService.createHtmlOutputFromFile(name).getContent();
+}
+
+/**
+ * デプロイ済み Web アプリの exec URL（userCodeAppPanel ではなくこちらを使う）
+ * @returns {string}
+ */
+function getWebAppUrl_() {
+  try {
+    var live = ScriptApp.getService().getUrl();
+    if (live) {
+      return String(live).replace(/\/$/, '');
+    }
+  } catch (e) {
+    /* 未デプロイ時 */
+  }
+  return String(getLatestWebAppUrl_() || '').replace(/\/$/, '');
+}
+
+/**
+ * @param {string} page
+ * @param {Object<string, string>=} params
+ * @returns {string}
+ */
+function buildPageUrl_(page, params) {
+  params = params || {};
+  var parts = ['page=' + encodeURIComponent(page)];
+  Object.keys(params).forEach(function (key) {
+    if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+      parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(String(params[key])));
+    }
+  });
+  var qs = parts.join('&');
+  var base = getWebAppUrl_();
+  return base ? base + '?' + qs : '?' + qs;
+}
+
+function ensureWebAppUrlSaved_() {
+  try {
+    var url = ScriptApp.getService().getUrl();
+    if (url) {
+      PropertiesService.getScriptProperties().setProperty('WEB_APP_URL', url);
+    }
+  } catch (e) {
+    /* ignore */
+  }
 }

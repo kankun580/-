@@ -16,10 +16,11 @@
   </style>
 </head>
 <body>
-  <a class="back" href="?page=tips">← Tips連携一覧</a>
+  <a class="back" href="<?= webAppUrl ?>?page=tips" target="_top">← Tips連携一覧</a>
   <div id="content">読み込み中…</div>
   <script>
     var productId = '<?= productId ?>';
+    var webAppUrl = '<?= webAppUrl ?>';
 
     google.script.run
       .withSuccessHandler(render)
@@ -60,7 +61,7 @@
       google.script.run
         .withSuccessHandler(function (r) {
           document.getElementById('msg').textContent = r.message;
-          setTimeout(function () { location.href = '?page=tips'; }, 1000);
+          setTimeout(function () { location.href = webAppUrl + '?page=tips'; }, 1000);
         })
         .withFailureHandler(function (e) {
           document.getElementById('msg').textContent = 'エラー: ' + e.message;

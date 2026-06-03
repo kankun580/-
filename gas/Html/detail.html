@@ -17,10 +17,11 @@
   </style>
 </head>
 <body>
-  <a class="back" href="?page=review">← 一覧</a>
+  <a class="back" href="<?= webAppUrl ?>?page=review" target="_top">← 一覧</a>
   <div id="content">読み込み中…</div>
   <script>
     var productId = '<?= productId ?>';
+    var webAppUrl = '<?= webAppUrl ?>';
 
     google.script.run
       .withSuccessHandler(render)
@@ -59,7 +60,7 @@
           '<button class="btn hold" onclick="act(\'hold\')">保留</button>' +
           '<button class="btn stop" onclick="confirmStop()">停止</button>';
       } else {
-        html += '<a class="back" href="?page=revision">← 修正待ち一覧</a>';
+        html += '<a class="back" href="' + webAppUrl + '?page=revision" target="_top">← 修正待ち一覧</a>';
       }
       html += '<p id="msg"></p>';
       document.getElementById('content').innerHTML = html;
@@ -71,7 +72,7 @@
       google.script.run
         .withSuccessHandler(function () {
           document.getElementById('msg').textContent = '完了。レビュー待ちへ移動します。';
-          setTimeout(function () { location.href = '?page=review'; }, 1000);
+          setTimeout(function () { location.href = webAppUrl + '?page=review'; }, 1000);
         })
         .withFailureHandler(function (e) {
           document.getElementById('msg').textContent = 'エラー: ' + e.message;
@@ -88,7 +89,7 @@
       document.getElementById('msg').textContent = '処理中…';
       var runner = google.script.run.withSuccessHandler(function (r) {
         document.getElementById('msg').textContent = r.message;
-        if (r.ok) setTimeout(function () { location.href = '?page=review'; }, 800);
+        if (r.ok) setTimeout(function () { location.href = webAppUrl + '?page=review'; }, 800);
       }).withFailureHandler(function (e) {
         document.getElementById('msg').textContent = 'エラー: ' + e.message;
       });
@@ -102,7 +103,7 @@
       google.script.run
         .withSuccessHandler(function (r) {
           alert(r.message);
-          location.href = '?page=review';
+          location.href = webAppUrl + '?page=review';
         })
         .stopProduct(productId);
     }

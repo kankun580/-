@@ -28,6 +28,7 @@ function injectSharedStyles_(html) {
  */
 function renderHtmlFile_(file, placeholders) {
   var html = HtmlService.createHtmlOutputFromFile(file).getContent();
+  html = html.split('{{WEBAPP_URL}}').join(getWebAppUrl_());
   Object.keys(placeholders).forEach(function (key) {
     html = html.split(key).join(placeholders[key]);
   });
@@ -75,7 +76,7 @@ function buildReviewCardHtml_(p) {
   } else if (p.risk_level === 'medium') {
     riskClass = 'risk-medium';
   }
-  var href = '?page=detail&product_id=' + encodeURIComponent(String(p.product_id));
+  var href = buildPageUrl_('detail', { product_id: String(p.product_id) });
   var summary = String(p.review_summary || '');
   if (summary.length > 80) {
     summary = summary.substring(0, 80);
@@ -83,7 +84,7 @@ function buildReviewCardHtml_(p) {
   return (
     '<div class="card"><a href="' +
     escapeHtml_(href) +
-    '">' +
+    '" target="_top">' +
     '<strong>' +
     escapeHtml_(p.title) +
     '</strong>' +
@@ -127,7 +128,7 @@ function buildRevisionListHtml_(items) {
   var parts = [];
   for (var i = 0; i < items.length; i++) {
     var p = items[i];
-    var href = '?page=detail&product_id=' + encodeURIComponent(String(p.product_id));
+    var href = buildPageUrl_('detail', { product_id: String(p.product_id) });
     parts.push(
       '<div class="card"><strong>' +
         escapeHtml_(p.title) +
@@ -142,7 +143,7 @@ function buildRevisionListHtml_(items) {
           : '') +
         '<a class="btn link" href="' +
         escapeHtml_(href) +
-        '">詳細を見る</a>' +
+        '" target="_top">詳細を見る</a>' +
         '<button type="button" class="btn" data-pid="' +
         escapeHtml_(String(p.product_id)) +
         '" onclick="regen(this.getAttribute(\'data-pid\'))">この商品を AI 再生成</button></div>'
@@ -182,7 +183,7 @@ function buildTipsPendingListHtml_(items) {
   var parts = [];
   for (var i = 0; i < items.length; i++) {
     var p = items[i];
-    var href = '?page=tips_detail&product_id=' + encodeURIComponent(String(p.product_id));
+    var href = buildPageUrl_('tips_detail', { product_id: String(p.product_id) });
     parts.push(
       '<div class="card"><strong>' +
         escapeHtml_(p.title) +
@@ -195,7 +196,7 @@ function buildTipsPendingListHtml_(items) {
         (p.tips_error ? '<div class="err">' + escapeHtml_(p.tips_error) + '</div>' : '') +
         '<a class="btn" href="' +
         escapeHtml_(href) +
-        '">URLを登録 / 詳細</a></div>'
+        '" target="_top">URLを登録 / 詳細</a></div>'
     );
   }
   return parts.join('');

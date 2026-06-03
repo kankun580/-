@@ -16,7 +16,7 @@
   </style>
 </head>
 <body>
-  <a class="back" href="?page=home">← ホーム</a>
+  <a class="back" href="{{WEBAPP_URL}}?page=home" target="_top">← ホーム</a>
   <h1>修正待ち</h1>
   <p style="font-size:14px;color:#666;">修正依頼後、「AI再生成」で Gemini が本文を直し、再びレビュー待ちになります。</p>
   <div id="list"><!--REVISION_LIST--></div>
@@ -29,7 +29,7 @@
       google.script.run
         .withSuccessHandler(function (r) {
           document.getElementById('msg').textContent = '完了しました。レビュー待ち一覧を確認してください。';
-          setTimeout(function () { location.href = '?page=review'; }, 1200);
+          setTimeout(function () { location.href = '{{WEBAPP_URL}}?page=review'; }, 1200);
         })
         .withFailureHandler(function (e) {
           document.getElementById('msg').textContent = 'エラー: ' + e.message;
@@ -43,7 +43,7 @@
         .withSuccessHandler(function (r) {
           if (r.processed) {
             document.getElementById('msg').textContent = '完了: ' + (r.product_id || '');
-            setTimeout(function () { location.href = '?page=review'; }, 1200);
+            setTimeout(function () { location.href = '{{WEBAPP_URL}}?page=review'; }, 1200);
           } else {
             document.getElementById('msg').textContent = r.message || '対象なし';
             location.reload();

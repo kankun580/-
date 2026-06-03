@@ -82,7 +82,10 @@
     }
 
     function escapeHtml(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(new RegExp('<', 'g'), '&lt;')
+        .replace(new RegExp('>', 'g'), '&gt;');
     }
     function escapeJs(s) {
       return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");

@@ -60,7 +60,12 @@
       }).join('');
     }
 
-    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+    function esc(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(new RegExp('<', 'g'), '&lt;')
+        .replace(new RegExp('>', 'g'), '&gt;');
+    }
   </script>
 </body>
 </html>

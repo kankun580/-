@@ -1,14 +1,46 @@
 # MCP セットアップ手順（スマホ / Cursor のみ）
 
-## 1. ファイルを置く
+## どこで設定するか（重要）
+
+| 画面 | MCP があるか |
+|---|---|
+| **cursor.com → Settings**（Privacy / Profile） | **ない** ← 今ここではない |
+| **[cursor.com/agents](https://cursor.com/agents)** の **MCP ドロップダウン** | **ある**（Cloud Agent 用） |
+| Cursor **デスクトップアプリ** → Settings → **Tools & MCP** | **ある**（ローカル Agent 用） |
+| リポジトリの `.cursor/mcp.json` | Cloud Agent には**自動では読まれない** |
+
+スマホのみの場合は **`cursor.com/agents` で MCP を追加**してください。
+
+## 1. Cloud Agent で Context7（スマホ向け・推奨）
+
+1. スマホブラウザで https://cursor.com/agents を開く
+2. **MCP** のドロップダウン（または「Add MCP」）を開く
+3. カスタム MCP として HTTP タイプを追加:
+
+```json
+{
+  "url": "https://mcp.context7.com/mcp",
+  "headers": {
+    "CONTEXT7_API_KEY": "（context7.com/dashboard で取得）"
+  }
+}
+```
+
+4. 新しい Cloud Agent 実行時に **Context7 を ON** にする
+
+API キーは [context7.com/dashboard](https://context7.com/dashboard) で無料取得できます。
+
+## 2. デスクトップがある場合（任意）
 
 ```bash
 cp .cursor/mcp.json.example .cursor/mcp.json
 ```
 
+Cursor アプリ → **Settings → Tools & MCP** で有効化。
+
 `.cursor/mcp.json` は **git にコミットしない**（`.gitignore` 済み）。
 
-## 2. Phase MCP-A（今すぐ）
+## 3. Phase MCP-A（デスクトップ / mcp.json 利用時）
 
 ### Context7
 

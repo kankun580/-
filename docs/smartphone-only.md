@@ -71,6 +71,7 @@
 
 ## MCP（Cursor の武器）
 
-差分仕様の MCP 6 点セットは `.cursor/mcp.json.example` を参照し、Cursor に接続すると Agent が Tips / Drive / GAS / Playwright 等を直接操作できます。未接続でも bootstrap までは npm スクリプトで完結します。
+- **設定場所**: [cursor.com/agents](https://cursor.com/agents) の MCP ドロップダウン（`cursor.com` の Settings 画面ではない）
+- 詳細: [mcp-setup.md](./mcp-setup.md) / [mcp-rollout.md](./mcp-rollout.md)
 
-詳細: [mcp-weapons.md](./mcp-weapons.md)
+未接続でも GAS bootstrap と管理画面は動きます。実装加速用の装備です。

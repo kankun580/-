@@ -110,6 +110,7 @@ function getProductDetailForWeb(productId) {
     if (draft.full_doc_url) {
       try {
         var docId = getDocIdFromUrl_(draft.full_doc_url);
+        ensureDraftDocumentSanitized_(docId);
         var previews = getDocPreviewsFromDocument_(docId);
         freePreview = previews.free_preview;
         paidPreview = previews.paid_preview;

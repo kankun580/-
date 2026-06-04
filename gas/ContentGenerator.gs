@@ -155,6 +155,7 @@ function regenerateDraftFromRevision(productId) {
 
   try {
     var docId = getDocIdFromUrl_(draft.full_doc_url);
+    ensureDraftDocumentSanitized_(docId);
     var currentText = readDraftDocumentText(docId);
     var versionNum = countRevisionVersionsInDoc_(currentText) + 1;
 

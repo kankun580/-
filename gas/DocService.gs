@@ -8,6 +8,7 @@
  * @returns {{ fullUrl: string, fullId: string }}
  */
 function createDraftDocument(title, content) {
+  content = sanitizeGeneratedContent_(content || {});
   var folderId = getConfigValue(CONFIG_KEYS.DRAFTS_FOLDER_ID);
   var doc = DocumentApp.create(title);
   var body = doc.getBody();
@@ -266,6 +267,7 @@ function truncatePreview_(text, maxLen) {
  * @param {Object} content
  */
 function appendRevisionToDocument(docId, versionNum, content) {
+  content = sanitizeGeneratedContent_(content || {});
   var doc = DocumentApp.openById(docId);
   var body = doc.getBody();
   body.appendParagraph('--- v' + versionNum + ' 修正版 ---').setHeading(DocumentApp.ParagraphHeading.HEADING1);
@@ -329,6 +331,79 @@ function extractArticleSectionsFromDocText_(text) {
  * @returns {Object}
  */
 function readArticleSectionsFromDoc(docId) {
+  ensureDraftDocumentSanitized_(docId);
   var text = readDraftDocumentText(docId);
   return sanitizeGeneratedContent_(extractArticleSectionsFromDocText_(text));
+}
+
+/**
+ * セクション見出し行か（サニタイズ対象外）
+ * @param {string} trimmed
+ * @returns {boolean}
+ */
+function isDocStructuralHeading_(trimmed) {
+  return (
+    isDocSectionMarker_(trimmed, '無料部分') ||
+    isDocSectionMarker_(trimmed, '有料部分') ||
+    isDocSectionMarker_(trimmed, 'CTA') ||
+    isDocSectionMarker_(trimmed, '注意書き') ||
+    isDocSectionMarker_(trimmed, 'AIセルフレビュー') ||
+    /---\s*v\d+\s*修正版\s*---/.test(trimmed)
+  );
+}
+
+/**
+ * Google Docs 本文のマークダウン装飾を除去して保存（既存下書き用）
+ * @param {string} docId
+ * @returns {{ changed: boolean, updatedParagraphs: number }}
+ */
+function sanitizeDraftDocumentInPlace_(docId) {
+  var doc = DocumentApp.openById(docId);
+  var body = doc.getBody();
+  var updated = 0;
+
+  function trySanitizeElement_(element) {
+    if (!element || typeof element.getText !== 'function' || typeof element.setText !== 'function') {
+      return;
+    }
+    var raw = element.getText();
+    var trimmed = String(raw).trim();
+    if (!trimmed || isDocStructuralHeading_(trimmed)) {
+      return;
+    }
+    if (!hasMarkdownArtifacts_(raw)) {
+      return;
+    }
+    var clean = sanitizeArticleText_(raw);
+    if (clean !== raw) {
+      element.setText(clean);
+      updated++;
+    }
+  }
+
+  var paragraphs = body.getParagraphs();
+  for (var i = 0; i < paragraphs.length; i++) {
+    trySanitizeElement_(paragraphs[i]);
+  }
+  var listItems = body.getListItems();
+  for (var j = 0; j < listItems.length; j++) {
+    trySanitizeElement_(listItems[j]);
+  }
+
+  if (updated > 0) {
+    doc.saveAndClose();
+  }
+  return { changed: updated > 0, updatedParagraphs: updated };
+}
+
+/**
+ * マークダウンが残っていれば Doc を更新
+ * @param {string} docId
+ * @returns {boolean}
+ */
+function ensureDraftDocumentSanitized_(docId) {
+  if (!hasMarkdownArtifacts_(readDraftDocumentText(docId))) {
+    return false;
+  }
+  return sanitizeDraftDocumentInPlace_(docId).changed;
 }

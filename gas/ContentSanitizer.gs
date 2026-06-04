@@ -58,9 +58,32 @@ function sanitizeArticleText_(text) {
   s = s.replace(/\[([^\]]+)\]\([^)\s]+\)/g, '$1');
   s = s.replace(/^#{1,6}\s+/gm, '');
   s = s.replace(/^[ \t]*[-*_]{3,}[ \t]*$/gm, '');
+  s = s.replace(/^[ \t]*\*[ \t]+/gm, '・ ');
+  s = s.replace(/^[ \t]*-[ \t]+/gm, '・ ');
   s = s.replace(/\*\*/g, '');
   s = s.replace(/\n{3,}/g, '\n\n');
   return s.trim();
+}
+
+/**
+ * マークダウン装飾が残っているか
+ * @param {string} text
+ * @returns {boolean}
+ */
+function hasMarkdownArtifacts_(text) {
+  var s = String(text || '');
+  if (!s) {
+    return false;
+  }
+  return (
+    /\*\*/.test(s) ||
+    /__[^_\n]+__/.test(s) ||
+    /`[^`\n]+`/.test(s) ||
+    /^#{1,6}\s/m.test(s) ||
+    /\[[^\]]+\]\([^)]+\)/.test(s) ||
+    /^[ \t]*\*[ \t]+\S/m.test(s) ||
+    /^[ \t]*-[ \t]+\S/m.test(s)
+  );
 }
 
 /**

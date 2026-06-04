@@ -92,7 +92,6 @@ function isDocSectionMarker_(line, keyword) {
 function isDocSectionEndMarker_(line) {
   var norm = String(line || '').replace(/\s/g, '');
   return (
-    isDocSectionMarker_(line, '有料部分') ||
     isDocSectionMarker_(line, 'CTA') ||
     isDocSectionMarker_(line, '注意書き') ||
     isDocSectionMarker_(line, 'AIセルフレビュー') ||
@@ -109,20 +108,33 @@ function isDocSectionEndMarker_(line) {
 function getDocPreviewsFromDocument_(docId, maxLen) {
   maxLen = maxLen || 400;
   var doc = DocumentApp.openById(docId);
+  var fullText = doc.getBody().getText();
+  var fromText = extractPreviewFromDocText_(fullText, maxLen);
+  var fromParagraphs = getDocPreviewsFromParagraphs_(doc, maxLen);
+  return {
+    free_preview: pickDocPreview_(fromText.free_preview, fromParagraphs.free_preview),
+    paid_preview: pickDocPreview_(fromText.paid_preview, fromParagraphs.paid_preview),
+  };
+}
+
+/**
+ * 段落走査でプレビュー取得（getText と相互補完）
+ * @param {GoogleAppsScript.Document.Document} doc
+ * @param {number} maxLen
+ * @returns {{ free_preview: string, paid_preview: string }}
+ */
+function getDocPreviewsFromParagraphs_(doc, maxLen) {
   var paragraphs = doc.getBody().getParagraphs();
   var freeLines = [];
   var paidLines = [];
   var section = '';
-  var inRevision = false;
 
   for (var i = 0; i < paragraphs.length; i++) {
-    var line = paragraphs[i].getText();
-    var trimmed = String(line).trim();
+    var trimmed = String(paragraphs[i].getText()).trim();
     if (!trimmed) {
       continue;
     }
     if (/---\s*v\d+\s*修正版\s*---/.test(trimmed)) {
-      inRevision = true;
       freeLines = [];
       paidLines = [];
       section = '';
@@ -136,7 +148,7 @@ function getDocPreviewsFromDocument_(docId, maxLen) {
       section = 'paid';
       continue;
     }
-    if (section && isDocSectionEndMarker_(trimmed) && !isDocSectionMarker_(trimmed, '有料部分')) {
+    if (section && isDocSectionEndMarker_(trimmed)) {
       section = '';
       continue;
     }
@@ -147,17 +159,32 @@ function getDocPreviewsFromDocument_(docId, maxLen) {
     }
   }
 
-  if (!freeLines.length && !paidLines.length) {
-    var fromText = extractPreviewFromDocText_(doc.getBody().getText(), maxLen);
-    if (fromText.free_preview !== '（なし）' || fromText.paid_preview !== '（なし）') {
-      return fromText;
-    }
-  }
-
   return {
     free_preview: truncatePreview_(freeLines.join('\n'), maxLen),
     paid_preview: truncatePreview_(paidLines.join('\n'), maxLen),
   };
+}
+
+/**
+ * 2 つのプレビュー候補から有効な方を採用（空は「（なし）」）
+ * @param {string} a
+ * @param {string} b
+ * @returns {string}
+ */
+function pickDocPreview_(a, b) {
+  var empty = '（なし）';
+  var aOk = a && a !== empty;
+  var bOk = b && b !== empty;
+  if (aOk && !bOk) {
+    return a;
+  }
+  if (bOk && !aOk) {
+    return b;
+  }
+  if (aOk && bOk) {
+    return a.length >= b.length ? a : b;
+  }
+  return empty;
 }
 
 /**
@@ -175,7 +202,14 @@ function extractPreviewFromDocText_(text, maxLen) {
   }
   return {
     free_preview: truncatePreview_(extractSection_(body, '--- 無料部分 ---', '--- 有料部分 ---'), maxLen),
-    paid_preview: truncatePreview_(extractSection_(body, '--- 有料部分 ---', '--- CTA ---'), maxLen),
+    paid_preview: truncatePreview_(
+      extractSectionWithEnds_(body, '--- 有料部分 ---', [
+        '--- CTA ---',
+        '--- 注意書き ---',
+        '--- AIセルフレビュー',
+      ]),
+      maxLen
+    ),
   };
 }
 
@@ -186,14 +220,30 @@ function extractPreviewFromDocText_(text, maxLen) {
  * @returns {string}
  */
 function extractSection_(body, startMarker, endMarker) {
+  return extractSectionWithEnds_(body, startMarker, [endMarker]);
+}
+
+/**
+ * 開始マーカーから、最初に現れる終了マーカーの手前までを抽出
+ * @param {string} body
+ * @param {string} startMarker
+ * @param {string[]} endMarkers
+ * @returns {string}
+ */
+function extractSectionWithEnds_(body, startMarker, endMarkers) {
   var start = body.indexOf(startMarker);
   if (start < 0) {
     return '';
   }
   start += startMarker.length;
-  var end = body.indexOf(endMarker, start);
-  var section = end < 0 ? body.substring(start) : body.substring(start, end);
-  return section.trim();
+  var end = body.length;
+  for (var i = 0; i < endMarkers.length; i++) {
+    var pos = body.indexOf(endMarkers[i], start);
+    if (pos >= 0 && pos < end) {
+      end = pos;
+    }
+  }
+  return body.substring(start, end).trim();
 }
 
 /**
@@ -263,7 +313,11 @@ function extractArticleSectionsFromDocText_(text) {
   }
   return {
     free_part: extractSection_(body, '--- 無料部分 ---', '--- 有料部分 ---'),
-    paid_part: extractSection_(body, '--- 有料部分 ---', '--- CTA ---'),
+    paid_part: extractSectionWithEnds_(body, '--- 有料部分 ---', [
+      '--- CTA ---',
+      '--- 注意書き ---',
+      '--- AIセルフレビュー',
+    ]),
     cta: extractSection_(body, '--- CTA ---', '--- 注意書き ---'),
     disclaimer: extractSection_(body, '--- 注意書き ---', '--- AIセルフレビュー'),
   };

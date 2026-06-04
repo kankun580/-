@@ -12,12 +12,17 @@ function generateDrafts() {
     return { ok: false, message: '本日の生成上限に達しています（' + maxDaily + '件）' };
   }
 
-  var targets = getProductsByStatus('未着手');
+  resetStuckProductsToPending_();
+  ensureOneSampleProductIfEmpty_();
+
+  var targets = getGeneratableProducts_();
   if (!targets.length) {
-    targets = getProductsByStatus('生成待ち');
-  }
-  if (!targets.length) {
-    return { ok: true, message: '生成対象の商品がありません', generated: 0 };
+    return {
+      ok: false,
+      message:
+        '生成対象の商品がありません。スプレッドシートの products に「未着手」の行があるか確認してください。',
+      generated: 0,
+    };
   }
 
   var product = targets[0];
@@ -211,6 +216,23 @@ function regenerateDraftFromRevision(productId) {
     });
     throw e;
   }
+}
+
+/**
+ * 商品が0件ならサンプル1件を追加
+ * @returns {boolean}
+ */
+function ensureOneSampleProductIfEmpty_() {
+  var sheet = getProductsSheet_();
+  if (sheet && sheet.getLastRow() >= 2) {
+    return false;
+  }
+  var ss = getManagementSpreadsheet();
+  if (!ss) {
+    return false;
+  }
+  createSampleRows(ss);
+  return true;
 }
 
 function buildDefaultDisclaimer_(riskLevel) {

@@ -26,7 +26,8 @@ function getProductsByStatus(status) {
     return [];
   }
   var lastRow = sheet.getLastRow();
-  var data = sheet.getRange(2, 1, lastRow, 11).getValues();
+  var numRows = lastRow - 1;
+  var data = sheet.getRange(2, 1, numRows, 11).getValues();
   var list = [];
   for (var i = 0; i < data.length; i++) {
     if (String(data[i][PRODUCT_COL.STATUS - 1]) === status) {
@@ -34,6 +35,44 @@ function getProductsByStatus(status) {
     }
   }
   return list;
+}
+
+/**
+ * 下書き生成の対象になり得る商品
+ * @returns {Array<Object>}
+ */
+function getGeneratableProducts_() {
+  var statuses = ['未着手', '生成待ち', '生成失敗', '生成中'];
+  var list = [];
+  var seen = {};
+  for (var s = 0; s < statuses.length; s++) {
+    var batch = getProductsByStatus(statuses[s]);
+    for (var i = 0; i < batch.length; i++) {
+      var id = batch[i].product_id;
+      if (!seen[id]) {
+        seen[id] = true;
+        list.push(batch[i]);
+      }
+    }
+  }
+  return list;
+}
+
+/**
+ * 生成失敗・生成中を未着手に戻す
+ * @returns {number}
+ */
+function resetStuckProductsToPending_() {
+  var reset = 0;
+  var statuses = ['生成失敗', '生成中'];
+  for (var s = 0; s < statuses.length; s++) {
+    var batch = getProductsByStatus(statuses[s]);
+    for (var i = 0; i < batch.length; i++) {
+      updateProductStatus(batch[i].product_id, '未着手');
+      reset++;
+    }
+  }
+  return reset;
 }
 
 /**
@@ -46,7 +85,8 @@ function getProductById(productId) {
     return null;
   }
   var lastRow = sheet.getLastRow();
-  var data = sheet.getRange(2, 1, lastRow, 11).getValues();
+  var numRows = lastRow - 1;
+  var data = sheet.getRange(2, 1, numRows, 11).getValues();
   for (var i = 0; i < data.length; i++) {
     if (String(data[i][0]) === productId) {
       return rowToProduct_(data[i]);
@@ -149,7 +189,8 @@ function getLatestDraftByProductId(productId) {
     return null;
   }
   var lastRow = sheet.getLastRow();
-  var data = sheet.getRange(2, 1, lastRow, 10).getValues();
+  var numRows = lastRow - 1;
+  var data = sheet.getRange(2, 1, numRows, 10).getValues();
   var found = null;
   for (var i = data.length - 1; i >= 0; i--) {
     if (String(data[i][1]) === productId) {
@@ -207,12 +248,13 @@ function countGeneratedToday_() {
   }
   var today = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd');
   var lastRow = sheet.getLastRow();
-  var updated = sheet.getRange(2, PRODUCT_COL.UPDATED, lastRow, 1).getValues();
-  var statusCol = sheet.getRange(2, PRODUCT_COL.STATUS, lastRow, 1).getValues();
+  var numRows = lastRow - 1;
+  var updated = sheet.getRange(2, PRODUCT_COL.UPDATED, numRows, 1).getValues();
+  var statusCol = sheet.getRange(2, PRODUCT_COL.STATUS, numRows, 1).getValues();
   var count = 0;
   for (var i = 0; i < updated.length; i++) {
     var u = String(updated[i][0]);
-    if (u.indexOf(today) === 0 && String(statusCol[i][0]) !== '未着手') {
+    if (u.indexOf(today) === 0 && String(statusCol[i][0]) === 'レビュー待ち') {
       count++;
     }
   }

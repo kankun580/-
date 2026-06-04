@@ -20,5 +20,7 @@ function getProjectStatus() {
     revisionWaitingCount: revisionWaitingCount,
     tipsPendingCount: tipsPendingCount,
     pendingCount: getProductsByStatus('未着手').length,
+    generatableCount: getGeneratableProducts_().length,
+    failedCount: getProductsByStatus('生成失敗').length,
   };
 }

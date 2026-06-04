@@ -19,7 +19,7 @@
   <a class="back" href="{{WEBAPP_URL}}?page=home" target="_top">← ホーム</a>
   <h1>修正待ち</h1>
   <p style="font-size:14px;color:#666;">修正依頼後、「AI再生成」で Gemini が本文を直し、再びレビュー待ちになります。</p>
-  <div id="list"><!--REVISION_LIST--></div>
+  <div id="list">{{REVISION_LIST}}</div>
   <button class="btn" onclick="runProcessOne()">先頭1件を AI 再生成</button>
   <p id="msg" style="font-size:14px;margin-top:12px;"></p>
   <script>

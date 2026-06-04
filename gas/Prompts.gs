@@ -26,7 +26,9 @@ function buildContentGenerationPrompt_(product) {
     '- 体験談を捏造しない\n' +
     '- 法律・労務の断定をしない\n' +
     '- 収益を保証しない\n' +
-    '- スマホで読みやすい改行\n\n' +
+    '- スマホで読みやすい改行\n' +
+    buildPlainTextStyleRules_() +
+    '\n' +
     '商品情報:\n' +
     'カテゴリ/タイプ: ' +
     product.product_type +
@@ -82,7 +84,9 @@ function buildRevisionPrompt_(product, currentText, revisionComment) {
     '- 体験談を捏造しない\n' +
     '- 法律・労務の断定をしない\n' +
     '- 収益を保証しない\n' +
-    '- スマホで読みやすい改行\n\n' +
+    '- スマホで読みやすい改行\n' +
+    buildPlainTextStyleRules_() +
+    '\n' +
     '修正コメント:\n' +
     (revisionComment || '（コメントなし — 品質と読みやすさを改善）') +
     '\n\n' +

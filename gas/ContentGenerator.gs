@@ -58,7 +58,7 @@ function generateDraftForProduct_(product) {
       model: model,
       processType: 'generateDraft',
     });
-    var parsed = parseGeminiJson_(reply.text);
+    var parsed = sanitizeGeneratedContent_(parseGeminiJson_(reply.text));
 
     var doc = createDraftDocument(parsed.title || product.title, {
       title: parsed.title,
@@ -164,7 +164,7 @@ function regenerateDraftFromRevision(productId) {
       model: model,
       processType: 'regenerateDraft',
     });
-    var parsed = parseGeminiJson_(reply.text);
+    var parsed = sanitizeGeneratedContent_(parseGeminiJson_(reply.text));
 
     appendRevisionToDocument(docId, versionNum, {
       title: parsed.title || product.title,

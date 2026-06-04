@@ -252,7 +252,7 @@ function extractSectionWithEnds_(body, startMarker, endMarkers) {
  * @returns {string}
  */
 function truncatePreview_(text, maxLen) {
-  var s = String(text || '').trim();
+  var s = sanitizeArticleText_(String(text || ''));
   if (s.length <= maxLen) {
     return s || '（なし）';
   }
@@ -330,5 +330,5 @@ function extractArticleSectionsFromDocText_(text) {
  */
 function readArticleSectionsFromDoc(docId) {
   var text = readDraftDocumentText(docId);
-  return extractArticleSectionsFromDocText_(text);
+  return sanitizeGeneratedContent_(extractArticleSectionsFromDocText_(text));
 }

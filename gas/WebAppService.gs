@@ -110,12 +110,19 @@ function getProductDetailForWeb(productId) {
     if (draft.full_doc_url) {
       try {
         var docId = getDocIdFromUrl_(draft.full_doc_url);
-        var previews = extractPreviewFromDocText_(readDraftDocumentText(docId));
+        var previews = getDocPreviewsFromDocument_(docId);
         freePreview = previews.free_preview;
         paidPreview = previews.paid_preview;
+        if (freePreview === '（なし）' && paidPreview === '（なし）') {
+          freePreview = '（本文は Google Docs でご確認ください）';
+        }
       } catch (e) {
-        freePreview = '（プレビュー取得エラー）';
-        paidPreview = '';
+        writeErrorLog('getProductDetailForWeb_preview', e.message, {
+          productId: productId,
+          docUrl: draft.full_doc_url,
+        });
+        freePreview = '（プレビュー取得エラー: ' + e.message + '）';
+        paidPreview = '（Docsリンクから全文を開いてください）';
       }
     }
   }

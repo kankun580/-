@@ -49,11 +49,16 @@ function createDraftDocument(title, content) {
  * @returns {string}
  */
 function getDocIdFromUrl_(url) {
-  var match = String(url).match(/\/document\/d\/([a-zA-Z0-9_-]+)/);
-  if (!match) {
-    throw new Error('Docs URL が不正です');
+  var u = String(url || '').trim();
+  var match = u.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) {
+    return match[1];
   }
-  return match[1];
+  match = u.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (match) {
+    return match[1];
+  }
+  throw new Error('Docs URL が不正です: ' + u.substring(0, 80));
 }
 
 /**
@@ -64,6 +69,95 @@ function getDocIdFromUrl_(url) {
 function readDraftDocumentText(docId) {
   var doc = DocumentApp.openById(docId);
   return doc.getBody().getText();
+}
+
+/**
+ * マーカー行か（全角ハイフン・空白のゆらぎを吸収）
+ * @param {string} line
+ * @param {string} keyword
+ * @returns {boolean}
+ */
+function isDocSectionMarker_(line, keyword) {
+  var norm = String(line || '')
+    .replace(/\s/g, '')
+    .replace(/[‐‑‒–—－]/g, '-');
+  return norm.indexOf('---') >= 0 && norm.indexOf(keyword) >= 0;
+}
+
+/**
+ * セクション終了マーカーか
+ * @param {string} line
+ * @returns {boolean}
+ */
+function isDocSectionEndMarker_(line) {
+  var norm = String(line || '').replace(/\s/g, '');
+  return (
+    isDocSectionMarker_(line, '有料部分') ||
+    isDocSectionMarker_(line, 'CTA') ||
+    isDocSectionMarker_(line, '注意書き') ||
+    isDocSectionMarker_(line, 'AIセルフレビュー') ||
+    norm.indexOf('修正版') >= 0
+  );
+}
+
+/**
+ * Document 構造からプレビュー取得（getText より安定）
+ * @param {string} docId
+ * @param {number=} maxLen
+ * @returns {{ free_preview: string, paid_preview: string }}
+ */
+function getDocPreviewsFromDocument_(docId, maxLen) {
+  maxLen = maxLen || 400;
+  var doc = DocumentApp.openById(docId);
+  var paragraphs = doc.getBody().getParagraphs();
+  var freeLines = [];
+  var paidLines = [];
+  var section = '';
+  var inRevision = false;
+
+  for (var i = 0; i < paragraphs.length; i++) {
+    var line = paragraphs[i].getText();
+    var trimmed = String(line).trim();
+    if (!trimmed) {
+      continue;
+    }
+    if (/---\s*v\d+\s*修正版\s*---/.test(trimmed)) {
+      inRevision = true;
+      freeLines = [];
+      paidLines = [];
+      section = '';
+      continue;
+    }
+    if (isDocSectionMarker_(trimmed, '無料部分')) {
+      section = 'free';
+      continue;
+    }
+    if (isDocSectionMarker_(trimmed, '有料部分')) {
+      section = 'paid';
+      continue;
+    }
+    if (section && isDocSectionEndMarker_(trimmed) && !isDocSectionMarker_(trimmed, '有料部分')) {
+      section = '';
+      continue;
+    }
+    if (section === 'free') {
+      freeLines.push(trimmed);
+    } else if (section === 'paid') {
+      paidLines.push(trimmed);
+    }
+  }
+
+  if (!freeLines.length && !paidLines.length) {
+    var fromText = extractPreviewFromDocText_(doc.getBody().getText(), maxLen);
+    if (fromText.free_preview !== '（なし）' || fromText.paid_preview !== '（なし）') {
+      return fromText;
+    }
+  }
+
+  return {
+    free_preview: truncatePreview_(freeLines.join('\n'), maxLen),
+    paid_preview: truncatePreview_(paidLines.join('\n'), maxLen),
+  };
 }
 
 /**

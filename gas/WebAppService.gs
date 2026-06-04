@@ -3,6 +3,14 @@
  */
 
 /**
+ * Gemini 疎通テスト（権限付与の再認証にも使う）
+ * @returns {Object}
+ */
+function runGeminiTestFromWeb() {
+  return testGeminiConnection();
+}
+
+/**
  * @returns {Array<Object>}
  */
 function getReviewWaitingProducts() {

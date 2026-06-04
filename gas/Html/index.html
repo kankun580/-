@@ -27,10 +27,25 @@
     <a class="btn" href="<?= webAppUrl ?>?page=review" target="_top">レビュー待ち一覧</a>
     <a class="btn secondary" href="<?= webAppUrl ?>?page=revision" target="_top">修正待ち一覧</a>
     <a class="btn secondary" href="<?= webAppUrl ?>?page=tips" target="_top">Tips連携</a>
+    <button type="button" class="btn secondary" onclick="runGeminiTest()">Gemini 接続テスト（権限の再許可）</button>
     <button type="button" class="btn secondary" onclick="runGenerate()">下書きを1件生成</button>
   </div>
-  <p id="msg" style="margin-top:12px;font-size:14px;"></p>
+  <p id="msg" style="margin-top:12px;font-size:14px;color:#333;"></p>
   <script>
+    function runGeminiTest() {
+      document.getElementById('msg').textContent = 'テスト中… 権限を求められたら「許可」を押してください';
+      google.script.run
+        .withSuccessHandler(function (r) {
+          document.getElementById('msg').textContent = r.ok
+            ? 'OK: ' + r.message
+            : '結果: ' + (r.message || JSON.stringify(r));
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('msg').textContent = 'エラー: ' + e.message;
+        })
+        .runGeminiTestFromWeb();
+    }
+
     function runGenerate() {
       document.getElementById('msg').textContent = '生成中…（1〜2分かかることがあります）';
       google.script.run

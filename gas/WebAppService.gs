@@ -7,7 +7,19 @@
  * @returns {Object}
  */
 function runGeminiTestFromWeb() {
-  return testGeminiConnection();
+  var auth = getAuthStatusForWeb();
+  if (auth.needsAuth) {
+    return {
+      ok: false,
+      needsAuth: true,
+      authUrl: auth.url,
+      message:
+        '外部API（Gemini）の権限がまだ許可されていません。下の「許可画面を開く」から Google で許可してください。',
+    };
+  }
+  var result = testGeminiConnection();
+  result.needsAuth = false;
+  return result;
 }
 
 /**

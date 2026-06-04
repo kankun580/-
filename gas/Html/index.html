@@ -16,6 +16,13 @@
 </head>
 <body>
   <h1>Tips AI 販売 管理</h1>
+  <? if (authStatus.needsAuth) { ?>
+  <div class="card" style="background:#fff8e1;border:1px solid #f9a825;">
+    <p><strong>追加の許可が必要です</strong></p>
+    <p style="font-size:14px;margin:8px 0;">Gemini で下書きを作るには、Google の権限画面を1回だけ開いて「許可」してください。</p>
+    <a class="btn" href="<?= authStatus.url ?>" target="_blank" rel="noopener">許可画面を開く</a>
+  </div>
+  <? } ?>
   <div class="card">
     <p>レビュー待ち</p>
     <p class="num"><?= status.reviewWaitingCount ?></p> 件
@@ -33,17 +40,31 @@
   <p id="msg" style="margin-top:12px;font-size:14px;color:#333;"></p>
   <script>
     function runGeminiTest() {
-      document.getElementById('msg').textContent = 'テスト中… 権限を求められたら「許可」を押してください';
+      var msg = document.getElementById('msg');
+      msg.textContent = 'テスト中…';
       google.script.run
         .withSuccessHandler(function (r) {
-          document.getElementById('msg').textContent = r.ok
-            ? 'OK: ' + r.message
-            : '結果: ' + (r.message || JSON.stringify(r));
+          if (r.needsAuth && r.authUrl) {
+            msg.innerHTML =
+              escHtml(r.message) +
+              '<br><br><a href="' +
+              escHtml(r.authUrl) +
+              '" target="_blank" rel="noopener" style="color:#1a73e8;font-weight:bold;">→ 許可画面を開く</a>';
+            return;
+          }
+          msg.textContent = r.ok ? 'OK: ' + r.message : '結果: ' + (r.message || JSON.stringify(r));
         })
         .withFailureHandler(function (e) {
-          document.getElementById('msg').textContent = 'エラー: ' + e.message;
+          msg.textContent = 'エラー: ' + e.message;
         })
         .runGeminiTestFromWeb();
+    }
+
+    function escHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(new RegExp('<', 'g'), '&lt;')
+        .replace(new RegExp('>', 'g'), '&gt;');
     }
 
     function runGenerate() {

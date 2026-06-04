@@ -78,6 +78,7 @@ function doGet(e) {
     var template = HtmlService.createTemplateFromFile('Html/index');
     template.status = getProjectStatus();
     template.webAppUrl = getWebAppUrl_();
+    template.authStatus = getAuthStatusForWeb();
     return htmlPage_(injectSharedStyles_(template.evaluate().getContent()), 'Tips AI 管理');
   } catch (err) {
     return HtmlService.createHtmlOutput(

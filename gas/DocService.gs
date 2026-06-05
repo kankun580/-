@@ -353,17 +353,113 @@ function isDocStructuralHeading_(trimmed) {
 }
 
 /**
+ * 段落・リスト項目をプレーンテキストに差し替え（setText は太字等を残すため clear を使う）
+ * @param {GoogleAppsScript.Document.Paragraph|GoogleAppsScript.Document.ListItem} element
+ * @param {string} text
+ */
+function setDocElementPlainText_(element, text) {
+  var value = String(text || '');
+  if (typeof element.clear === 'function' && typeof element.appendText === 'function') {
+    element.clear();
+    if (value) {
+      element.appendText(value);
+    }
+    return;
+  }
+  element.setText(value);
+}
+
+/**
+ * 太字・斜体などインライン装飾を解除
+ * @param {GoogleAppsScript.Document.Paragraph|GoogleAppsScript.Document.ListItem} element
+ * @returns {boolean}
+ */
+function elementHasInlineFormatting_(textElement) {
+  var len = textElement.getText().length;
+  if (len < 1) {
+    return false;
+  }
+  var offsets = [0];
+  if (len > 2) {
+    offsets.push(Math.floor(len / 2));
+  }
+  if (len > 1) {
+    offsets.push(len - 1);
+  }
+  for (var i = 0; i < offsets.length; i++) {
+    var o = offsets[i];
+    if (textElement.isBold(o) || textElement.isItalic(o) || textElement.isUnderline(o)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * 太字・斜体などインライン装飾を解除
+ * @param {GoogleAppsScript.Document.Paragraph|GoogleAppsScript.Document.ListItem} element
+ * @returns {boolean}
+ */
+function clearDocElementFormatting_(element) {
+  try {
+    var t = element.editAsText();
+    if (!t || !elementHasInlineFormatting_(t)) {
+      return false;
+    }
+    var len = t.getText().length;
+    t.setBold(0, len, false);
+    t.setItalic(0, len, false);
+    t.setUnderline(0, len, false);
+    t.setStrikethrough(0, len, false);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * コンテナ内の段落・リスト・表を再帰的に走査
+ * @param {GoogleAppsScript.Document.ContainerElement} container
+ * @param {function} visitor
+ */
+function walkDocContainer_(container, visitor) {
+  if (!container || typeof container.getNumChildren !== 'function') {
+    return;
+  }
+  var n = container.getNumChildren();
+  for (var i = 0; i < n; i++) {
+    var child = container.getChild(i);
+    var type = child.getType();
+    if (type === DocumentApp.ElementType.PARAGRAPH) {
+      visitor(child.asParagraph());
+    } else if (type === DocumentApp.ElementType.LIST_ITEM) {
+      visitor(child.asListItem());
+      walkDocContainer_(child.asListItem(), visitor);
+    } else if (type === DocumentApp.ElementType.TABLE) {
+      var table = child.asTable();
+      for (var r = 0; r < table.getNumRows(); r++) {
+        var row = table.getRow(r);
+        for (var c = 0; c < row.getNumCells(); c++) {
+          walkDocContainer_(row.getCell(c), visitor);
+        }
+      }
+    }
+  }
+}
+
+/**
  * Google Docs 本文のマークダウン装飾を除去して保存（既存下書き用）
  * @param {string} docId
- * @returns {{ changed: boolean, updatedParagraphs: number }}
+ * @returns {{ changed: boolean, updatedParagraphs: number, markdownRemaining: boolean }}
  */
 function sanitizeDraftDocumentInPlace_(docId) {
   var doc = DocumentApp.openById(docId);
   var body = doc.getBody();
   var updated = 0;
+  var formatCleared = 0;
 
   function trySanitizeElement_(element) {
-    if (!element || typeof element.getText !== 'function' || typeof element.setText !== 'function') {
+    if (!element || typeof element.getText !== 'function') {
       return;
     }
     var raw = element.getText();
@@ -371,39 +467,88 @@ function sanitizeDraftDocumentInPlace_(docId) {
     if (!trimmed || isDocStructuralHeading_(trimmed)) {
       return;
     }
-    if (!hasMarkdownArtifacts_(raw)) {
-      return;
-    }
     var clean = sanitizeArticleText_(raw);
     if (clean !== raw) {
-      element.setText(clean);
+      setDocElementPlainText_(element, clean);
       updated++;
+    }
+    if (clearDocElementFormatting_(element)) {
+      formatCleared++;
     }
   }
 
-  var paragraphs = body.getParagraphs();
-  for (var i = 0; i < paragraphs.length; i++) {
-    trySanitizeElement_(paragraphs[i]);
-  }
-  var listItems = body.getListItems();
-  for (var j = 0; j < listItems.length; j++) {
-    trySanitizeElement_(listItems[j]);
-  }
+  walkDocContainer_(body, trySanitizeElement_);
 
-  if (updated > 0) {
+  if (updated > 0 || formatCleared > 0) {
     doc.saveAndClose();
   }
-  return { changed: updated > 0, updatedParagraphs: updated };
+  var remaining = hasMarkdownArtifacts_(readDraftDocumentText(docId));
+  if (remaining) {
+    writeErrorLog('sanitizeDraftDocumentInPlace_', 'Markdown may remain after sanitize', {
+      docId: docId,
+      updatedParagraphs: updated,
+    });
+  }
+  return {
+    changed: updated > 0,
+    updatedParagraphs: updated,
+    markdownRemaining: remaining,
+  };
 }
 
 /**
- * マークダウンが残っていれば Doc を更新
+ * Doc をサニタイズ（詳細未表示でも一覧表示時に実行可能）
  * @param {string} docId
- * @returns {boolean}
+ * @returns {boolean} 更新したか
  */
 function ensureDraftDocumentSanitized_(docId) {
-  if (!hasMarkdownArtifacts_(readDraftDocumentText(docId))) {
-    return false;
-  }
   return sanitizeDraftDocumentInPlace_(docId).changed;
+}
+
+/**
+ * レビュー待ち商品の Docs を一括サニタイズ（一覧表示時）
+ */
+function sanitizeReviewWaitingDocs_() {
+  var items = getReviewWaitingProducts();
+  var count = 0;
+  for (var i = 0; i < items.length; i++) {
+    if (!items[i].doc_url) {
+      continue;
+    }
+    try {
+      var docId = getDocIdFromUrl_(items[i].doc_url);
+      if (ensureDraftDocumentSanitized_(docId)) {
+        count++;
+      }
+    } catch (e) {
+      writeErrorLog('sanitizeReviewWaitingDocs_', e.message, { productId: items[i].product_id });
+    }
+  }
+  return count;
+}
+
+/**
+ * clasp / 管理用: 指定商品の Doc サニタイズ結果を返す
+ * @param {string} productId
+ * @returns {Object}
+ */
+function verifyProductDocSanitize_(productId) {
+  var draft = getLatestDraftByProductId(productId);
+  if (!draft || !draft.full_doc_url) {
+    throw new Error('下書き Docs がありません');
+  }
+  var docId = getDocIdFromUrl_(draft.full_doc_url);
+  var before = readDraftDocumentText(docId);
+  var hadArtifacts = hasMarkdownArtifacts_(before);
+  var result = sanitizeDraftDocumentInPlace_(docId);
+  var after = readDraftDocumentText(docId);
+  return {
+    product_id: productId,
+    doc_id: docId,
+    had_artifacts_before: hadArtifacts,
+    updated_paragraphs: result.updatedParagraphs,
+    markdown_remaining: hasMarkdownArtifacts_(after),
+    sample_before: before.substring(0, 200),
+    sample_after: after.substring(0, 200),
+  };
 }

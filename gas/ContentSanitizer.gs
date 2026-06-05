@@ -29,11 +29,23 @@ function sanitizeGeneratedContent_(content) {
 }
 
 /**
+ * 全角・類似の装飾文字を ASCII に寄せる
+ * @param {string} text
+ * @returns {string}
+ */
+function normalizeMarkdownChars_(text) {
+  return String(text || '')
+    .replace(/\uFF0A/g, '*')
+    .replace(/\uFF3F/g, '_')
+    .replace(/\u2014/g, '-');
+}
+
+/**
  * @param {string} text
  * @returns {string}
  */
 function sanitizeArticleText_(text) {
-  var s = String(text || '');
+  var s = normalizeMarkdownChars_(String(text || ''));
   if (!s) {
     return '';
   }
@@ -71,7 +83,7 @@ function sanitizeArticleText_(text) {
  * @returns {boolean}
  */
 function hasMarkdownArtifacts_(text) {
-  var s = String(text || '');
+  var s = normalizeMarkdownChars_(String(text || ''));
   if (!s) {
     return false;
   }

@@ -75,6 +75,11 @@ function renderReviewPage_() {
   var listHtml;
   var count = 0;
   try {
+    try {
+      sanitizeReviewWaitingDocs_();
+    } catch (sanitizeErr) {
+      writeErrorLog('renderReviewPage_sanitize', sanitizeErr.message, {});
+    }
     var items = getReviewWaitingProducts();
     count = items.length;
     listHtml = buildReviewListHtml_(items);
@@ -147,20 +152,12 @@ function buildReviewCardHtml_(p) {
  */
 function renderRevisionPage_() {
   var listHtml;
-  var extra =
-    '<p style="font-size:14px;color:#666;">修正依頼後、「AI再生成」で Gemini が本文を直し、再びレビュー待ちになります。</p>' +
-    '<button type="button" class="btn" style="background:#5f6368" onclick="runProcessOne()">先頭1件を AI 再生成</button>' +
-    '<p id="msg" style="font-size:14px;margin-top:12px;"></p>' +
-    '<script src="' +
-    escapeHtml_(buildPageUrl_('home')) +
-    '"></script>';
   try {
-    listHtml =
-      extra + buildRevisionListHtml_(getRevisionWaitingProducts());
+    listHtml = buildRevisionListHtml_(getRevisionWaitingProducts());
   } catch (err) {
     listHtml = '<p class="error">データ取得エラー: ' + escapeHtml_(err.message) + '</p>';
   }
-  var html = buildListPageHtml_('修正待ち', listHtml);
+  var html = renderHtmlFile_('Html/revision', { '{{REVISION_LIST}}': listHtml });
   return htmlPage_(injectSharedStyles_(html), '修正待ち');
 }
 

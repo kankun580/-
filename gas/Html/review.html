@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <style>
+    body { font-family: -apple-system, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; }
+    h1 { font-size: 1.2rem; }
+    .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .card a { text-decoration: none; color: inherit; display: block; }
+    .meta { font-size: 13px; color: #666; margin-top: 6px; }
+    .risk-high { color: #c33; }
+    .risk-medium { color: #e37400; }
+    .risk-low { color: #0a7; }
+    .back { display: inline-block; margin-bottom: 12px; color: #1a73e8; }
+    .error { color: #c33; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <a class="back" href="{{WEBAPP_URL}}?page=home" target="_top">← ホーム</a>
+  <h1>レビュー待ち</h1>
+  <div id="list"><!--REVIEW_LIST--></div>
+</body>
+</html>

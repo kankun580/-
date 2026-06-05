@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <style>
+    body { font-family: -apple-system, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; font-size: 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .btn { display: block; width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem; border: none; border-radius: 10px; background: #1a73e8; color: #fff; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
+    .btn.secondary { background: #5f6368; }
+    input { width: 100%; padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; margin-top: 6px; }
+    label { font-size: 14px; font-weight: 600; }
+    .back { color: #1a73e8; text-decoration: none; }
+    pre { font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow: auto; background: #f0f0f0; padding: 8px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <a class="back" href="<?= webAppUrl ?>?page=tips" target="_top">← Tips連携一覧</a>
+  <div id="content">読み込み中…</div>
+  <script>
+    var productId = '<?= productId ?>';
+    var webAppUrl = '<?= webAppUrl ?>';
+
+    google.script.run
+      .withSuccessHandler(render)
+      .withFailureHandler(function (e) {
+        document.getElementById('content').textContent = 'エラー: ' + e.message;
+      })
+      .getProductDetailForWeb(productId);
+
+    function render(data) {
+      var p = data.product;
+      var html = '<h1>' + esc(p.title) + '</h1>' +
+        '<div class="card"><p>価格: ' + p.price_jpy + '円</p>' +
+        '<p>ステータス: ' + esc(p.status) + '</p></div>';
+
+      html += '<div class="card">' +
+        '<label>Tips 下書き URL</label>' +
+        '<input type="url" id="tips_url" placeholder="https://tips.jp/...">' +
+        '<label style="margin-top:12px;display:block;">Tips ID（任意）</label>' +
+        '<input type="text" id="tips_id" placeholder="">' +
+        '<button class="btn" onclick="saveUrl()">下書きURLを登録</button>' +
+        '<button class="btn secondary" onclick="exportJson()">ハンドオフJSONをDriveに保存</button>' +
+        '</div>';
+
+      html += '<div class="card"><p><strong>Cursor Agent 向け</strong></p>' +
+        '<p style="font-size:14px;">Tips MCP で下書き作成後、Webhook または上のフォームで URL を登録してください。</p>' +
+        '<button class="btn secondary" onclick="showPayload()">連携用JSONを表示</button>' +
+        '<pre id="payload" style="display:none;"></pre></div>';
+
+      html += '<p id="msg"></p>';
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function saveUrl() {
+      var url = document.getElementById('tips_url').value.trim();
+      var tipsId = document.getElementById('tips_id').value.trim();
+      if (!url) { alert('URLを入力してください'); return; }
+      document.getElementById('msg').textContent = '保存中…';
+      google.script.run
+        .withSuccessHandler(function (r) {
+          document.getElementById('msg').textContent = r.message;
+          setTimeout(function () { location.href = webAppUrl + '?page=tips'; }, 1000);
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('msg').textContent = 'エラー: ' + e.message;
+        })
+        .saveTipsDraftUrlFromWeb(productId, url, tipsId);
+    }
+
+    function exportJson() {
+      document.getElementById('msg').textContent = 'エクスポート中…';
+      google.script.run
+        .withSuccessHandler(function (r) {
+          document.getElementById('msg').textContent = 'Driveに保存: ' + (r.file_name || '');
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('msg').textContent = 'エラー: ' + e.message;
+        })
+        .exportTipsHandoffFromWeb(productId);
+    }
+
+    function showPayload() {
+      document.getElementById('msg').textContent = '読み込み中…';
+      google.script.run
+        .withSuccessHandler(function (payload) {
+          var pre = document.getElementById('payload');
+          pre.style.display = 'block';
+          pre.textContent = JSON.stringify(payload, null, 2);
+          document.getElementById('msg').textContent = '';
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('msg').textContent = 'エラー: ' + e.message;
+        })
+        .getTipsDraftPayloadForWeb(productId);
+    }
+
+    function esc(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(new RegExp('<', 'g'), '&lt;')
+        .replace(new RegExp('>', 'g'), '&gt;');
+    }
+  </script>
+</body>
+</html>

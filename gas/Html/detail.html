@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <style>
+    body { font-family: -apple-system, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; font-size: 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .btn { display: block; width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem; border: none; border-radius: 10px; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
+    .approve { background: #0a7; color: #fff; }
+    .revise { background: #1a73e8; color: #fff; }
+    .hold { background: #5f6368; color: #fff; }
+    .stop { background: #c33; color: #fff; }
+    textarea { width: 100%; min-height: 80px; font-size: 16px; padding: 8px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+    .back { color: #1a73e8; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <a class="back" href="<?= webAppUrl ?>?page=review" target="_top">← 一覧</a>
+  <div id="content">読み込み中…</div>
+  <script>
+    var productId = '<?= productId ?>';
+    var webAppUrl = '<?= webAppUrl ?>';
+
+    google.script.run
+      .withSuccessHandler(render)
+      .withFailureHandler(function (e) {
+        document.getElementById('content').textContent = 'エラー: ' + e.message;
+      })
+      .getProductDetailForWeb(productId);
+
+    function render(data) {
+      var p = data.product;
+      var d = data.draft || {};
+      var isRevision = p.status === '修正待ち' || p.status === '修正中';
+      var html = '<h1>' + esc(p.title) + '</h1><p style="font-size:14px;color:#666;">ステータス: ' + esc(p.status) + '</p>' +
+        '<div class="card">' +
+        '<p>価格: ' + p.price_jpy + '円 · リスク: ' + esc(p.risk_level) + '</p>' +
+        '<p>' + esc(p.target_reader) + '</p>' +
+        '<p><strong>AIレビュー</strong><br>' + esc(data.review_summary) + '</p>';
+      if (d.full_doc_url) {
+        html += '<p><a href="' + d.full_doc_url + '" target="_blank">Google Docsで開く</a></p>';
+      }
+      html += '</div>';
+      if (data.free_preview || data.paid_preview) {
+        html += '<div class="card"><strong>無料部分（プレビュー）</strong><p style="white-space:pre-wrap;font-size:14px;">' + esc(data.free_preview) + '</p>' +
+          '<strong>有料部分（プレビュー）</strong><p style="white-space:pre-wrap;font-size:14px;">' + esc(data.paid_preview) + '</p></div>';
+      }
+      if (d.approval_comment) {
+        html += '<div class="card"><strong>修正コメント</strong><p>' + esc(d.approval_comment) + '</p></div>';
+      }
+      if (isRevision) {
+        html += '<button class="btn revise" onclick="runRegen()">AI再生成（修正版を作成）</button>';
+      }
+      html += '<div class="card"><label>修正コメント（修正依頼時）</label><textarea id="comment">' + esc(d.approval_comment || '') + '</textarea></div>';
+      if (!isRevision) {
+        html += '<button class="btn approve" onclick="act(\'approve\')">承認</button>' +
+          '<button class="btn revise" onclick="act(\'revise\')">修正依頼</button>' +
+          '<button class="btn hold" onclick="act(\'hold\')">保留</button>' +
+          '<button class="btn stop" onclick="confirmStop()">停止</button>';
+      } else {
+        html += '<a class="back" href="' + webAppUrl + '?page=revision" target="_top">← 修正待ち一覧</a>';
+      }
+      html += '<p id="msg"></p>';
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function runRegen() {
+      if (!confirm('AIで修正版を生成しますか？')) return;
+      document.getElementById('msg').textContent = '再生成中…（1〜2分）';
+      google.script.run
+        .withSuccessHandler(function () {
+          document.getElementById('msg').textContent = '完了。レビュー待ちへ移動します。';
+          setTimeout(function () { location.href = webAppUrl + '?page=review'; }, 1000);
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('msg').textContent = 'エラー: ' + e.message;
+        })
+        .regenerateDraftFromRevision(productId);
+    }
+
+    function act(type) {
+      if (type === 'approve' && !confirm('承認しますか？')) return;
+      if (type === 'revise' && !confirm('修正依頼を送りますか？')) return;
+      var comment = document.getElementById('comment') ? document.getElementById('comment').value : '';
+      var fn = type === 'approve' ? 'approveProduct' : type === 'revise' ? 'requestRevision' : 'holdProduct';
+      var args = type === 'revise' ? [productId, comment] : [productId];
+      document.getElementById('msg').textContent = '処理中…';
+      var runner = google.script.run.withSuccessHandler(function (r) {
+        document.getElementById('msg').textContent = r.message;
+        if (r.ok) setTimeout(function () { location.href = webAppUrl + '?page=review'; }, 800);
+      }).withFailureHandler(function (e) {
+        document.getElementById('msg').textContent = 'エラー: ' + e.message;
+      });
+      if (type === 'revise') runner.requestRevision(productId, comment);
+      else if (type === 'approve') runner.approveProduct(productId);
+      else runner.holdProduct(productId);
+    }
+
+    function confirmStop() {
+      if (!confirm('停止しますか？この商品の処理は進みません。')) return;
+      google.script.run
+        .withSuccessHandler(function (r) {
+          alert(r.message);
+          location.href = webAppUrl + '?page=review';
+        })
+        .stopProduct(productId);
+    }
+
+    function esc(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(new RegExp('<', 'g'), '&lt;')
+        .replace(new RegExp('>', 'g'), '&gt;');
+    }
+  </script>
+</body>
+</html>
